@@ -13,7 +13,7 @@ from pytz import utc
 class Calendar(object):
     def __init__(self):
         if os.environ.get('GOOGLE_TOKEN'):
-            self.token = pickle.loads(base64.decodebytes(bytes(os.environ['GOOGLE_TOKEN'], 'utf-8'))
+            self.token = pickle.loads(base64.decodebytes(bytes(os.environ['GOOGLE_TOKEN'], 'utf-8')))
         else:
             token_file = os.path.join(os.path.dirname(__file__), 'token.pickle')
             self.token = pickle.load(open(token_file, 'rb'))
