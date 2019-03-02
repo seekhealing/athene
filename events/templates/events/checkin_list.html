@@ -1,0 +1,17 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<h1>Event Check-In Portal</h1>
+<div id="content-main">
+    <div class="module">
+        <table>
+            <caption>Events in the next 24 hours</caption>
+            {% for event in upcoming_events %}
+            <tr>
+              <th scope="row"><a href="{{ event.calendar_id|urlencode }}/{{ event.event_id|urlencode }}/">{{ event.summary}}</th>
+              <td>{{ event.start_dt|date:"N j, Y P"}} - {{ event.end_dt|date:"P" }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</div>
+{% endblock %}

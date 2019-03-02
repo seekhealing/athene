@@ -1,0 +1,52 @@
+{% extends "admin/base_site.html"%}
+{% load static admin_urls admin_modify %}
+
+{% block extrahead %}{{ block.super }}
+<script type="text/javascript" src="{% url 'admin:jsi18n' %}"></script>
+{{ media }}
+{% endblock %}
+
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static "admin/css/forms.css" %}">{% endblock %}
+
+{% block coltype %}colM{% endblock %}
+
+{% block bodyclass %}{{ block.super }} app-{{ opts.app_label }} model-{{ opts.model_name }} change-form{% endblock %}
+
+{% block content %}
+<div id="content-main">
+<h1>Check in for {{ event.summary }}</h1>
+<form action="." method="POST">{% csrf_token %}
+<div>
+{{ form_obj.as_table }}
+
+<div class="submit-row">
+<input type="submit" value="Checkin" class="default">
+</div>
+
+<div class="module">
+  <table>
+  <caption>Seekers Checked in</caption>
+  {% for seeker in already_checked_in %}
+  <tr>
+    <th scope="row">{{ seeker.seeker }}
+  </tr>
+  {% endfor %}
+  </table>
+</div>
+{% block admin_change_form_document_ready %}
+    {{ form_obj.media }}
+    <script type="text/javascript"
+            id="django-admin-form-add-constants"
+            src="{% static 'admin/js/change_form.js' %}"
+            {% if adminform and add %}
+                data-model-name="{{ opts.model_name }}"
+            {% endif %}>
+    </script>
+{% endblock %}
+
+{# JavaScript for prepopulated fields #}
+{% prepopulated_fields_js %}
+</div>
+</form>
+</div>
+{% endblock %}

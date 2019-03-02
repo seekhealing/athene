@@ -1,0 +1,74 @@
+{% extends "admin/change_form.html" %}
+{% load static %}
+
+{% block extrahead %}
+{{ block.super }}
+{{ date_form.media }}
+{% endblock %}
+
+{% block content %}
+  {% if stage == 'checkin' %}
+    {{ block.super }}
+  {% elif stage == 'pick_event' %}
+    <div id="content-main">
+        <div class="module">
+            <table>
+                <caption>Events Available for Check-In</caption>
+                {% for event in upcoming_events %}
+                <tr>
+                <th scope="row"><a href=".?calendar={{ event.calendar_id|urlencode }}&event_id={{ event.event_id|urlencode }}&recurring_event_id={{ event.recurring_event_id|urlencode }}">{{ event.summary}}</th>
+                <td>{{ event.start_dt|date:"N j, Y P"}} - {{ event.end_dt|date:"P" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                <td><em>No events scheduled.</em></th>
+                <tr>
+                {% endfor %}
+            </table>
+            <p><a href=".?past_event=1">Choose another date</a></p>
+        </div>
+    </div>
+  {% else %}
+    <div id="content-main">
+      <form action="." method="get">
+      <div class="module">
+        {{ date_form.as_table }}
+      </div>
+      <div class="submit-row">
+        <input type="submit" value="Search" class="default">
+      </div>
+      </form>
+    </div>
+  {% endif %}
+{% endblock %}
+
+{% block field_sets %}
+{% if stage == 'checkin' %}
+<p>{{ event.start_dt|date:"N j, Y P"}} @ {{ event.location }}</p>
+{% endif %}
+{{ block.super }}
+
+{% endblock %}
+
+{% block submit_buttons_bottom %}
+{% if stage == 'checkin' %}
+<div class="submit-row">
+  <input type="submit" value="Check in" class="default" name="_continue">
+</div>
+<div class="module">
+  <table>
+    <caption>Seekers already checked in</caption>
+    {% for checkin in already_checked_in %}
+    <tr>
+      <th scope="row">{{ checkin.seeker }}</th>
+    </tr>
+    {% empty %}
+    <tr>
+      <td><em>No seekers checked into this event yet.</em></td>
+    {% endfor %}
+  </table>
+</div>
+{% else %}
+{{ block.super }}
+{% endif %}
+{% endblock %}

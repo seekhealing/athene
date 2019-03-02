@@ -1,0 +1,28 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+pylint = "*"
+pylint-django = "*"
+
+[packages]
+django = "*"
+psycopg2 = "*"
+whitenoise = "*"
+django-localflavor = "*"
+django-phonenumber-field = "*"
+phonenumbers = "*"
+google-api-python-client = "*"
+google-auth-httplib2 = "*"
+google-auth-oauthlib = "*"
+django-multiselectfield = "*"
+pytz = "*"
+python-dateutil = "*"
+dj-database-url = "*"
+gunicorn = "*"
+django-ckeditor = "*"
+
+[requires]
+python_version = "3.7"

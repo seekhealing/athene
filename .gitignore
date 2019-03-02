@@ -1,0 +1,6 @@
+db.sqlite3
+.vscode/
+events/credentials.json
+events/token.pickle
+staticfiles/
+.env
