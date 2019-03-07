@@ -17,16 +17,13 @@ class SeekerNoteAdmin(admin.StackedInline):
     model = SeekerNote
     extra = 1
     template = 'admin/edit_inline/stacked_safe_display.html'
-    readonly_fields = ['added_by', 'created']
+    fieldsets = (
+        (None, {
+            'fields': ('note',)
+    }),)
 
     def has_change_permission(self, request, obj=None):
         return False
-
-    def formfield_for_dbfield(self, db_field, request, **kwargs):
-        if db_field.name == 'added_by':
-            return db_field.formfield(widget=forms.HiddenInput(),
-                                      initial=request.user)
-        return super().formfield_for_dbfield(db_field, request, **kwargs)
 
 class IsActiveFilter(admin.SimpleListFilter):
     title = 'Active?'
@@ -87,7 +84,7 @@ class SeekerAdmin(admin.ModelAdmin):
     readonly_fields = ['show_id', 'seeker_pair', 'listener_trained', 
                        'extra_care', 'extra_care_graduate', 
                        'created', 'updated']
-    list_display = ['__str__', 'listener_trained', 'extra_care', 'extra_care_graduate', 'is_active']
+    list_display = ['__str__', 'email', 'phone_number', 'listener_trained', 'extra_care', 'extra_care_graduate', 'is_active']
     list_filter = ['listener_trained', 'extra_care', 'extra_care_graduate', IsActiveFilter]
     search_fields = ['last_names', 'first_names', 'email', 'phone_number']
 
@@ -97,6 +94,15 @@ class SeekerAdmin(admin.ModelAdmin):
 
     def seeker_pair(self, instance):
         return instance.seeker_pair
+
+    def save_formset(self, request, form, formset, change):
+        instances = formset.save(commit=False)
+
+        for instance in instances:
+            if isinstance(instance, SeekerNote):
+                if not instance.id:
+                    instance.added_by = request.user
+            instance.save()
 
 class SeekerPairingAdmin(admin.ModelAdmin):
     model = SeekerPairing

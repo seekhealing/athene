@@ -3,6 +3,7 @@ import string
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
+from django import template
 
 from ckeditor.fields import RichTextField
 from localflavor.us.models import USStateField
@@ -141,12 +142,17 @@ class SeekerNote(models.Model):
                                  editable=False, null=True)
     note = RichTextField()
 
+    STR_TEMPLATE = template.Template(
+        '{{ timestamp|date:"DATETIME_FORMAT" }} by {{ added_by }}')
     def __str__(self):
-        timestamp = self.created.strftime("%Y-%m-%d %H:%M:%S")
-        words = self.note.split(' ')[:10]
-        lead_in = ' '.join(words[:10])
-        if len(words) > 10:
-            lead_in += '...'
-        return f'{timestamp} by {self.added_by}: {lead_in}'
+        return self.STR_TEMPLATE.render(
+            template.Context(
+                dict(timestamp=self.created,
+                      added_by=self.added_by)
+            )
+        )
+    
+    class Meta:
+        ordering = ('-created',)
     
 

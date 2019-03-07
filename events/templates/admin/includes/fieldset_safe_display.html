@@ -14,8 +14,12 @@
                     {% else %}
                         {{ field.label_tag }}
                         {% if field.is_readonly %}
-                            {# This is the only change here to display notes as HTML. #}
+                            {# Display notes as HTML. #}
+                            {% if field.field.name == 'note' %}
                             <div class="readonly">{{ field.form.instance.note|safe }}</div>
+                            {% else %}
+                            <div class="readonly">{{ field.contents }}</div>
+                            {% endif %}
                         {% else %}
                             {{ field.field }}
                         {% endif %}
