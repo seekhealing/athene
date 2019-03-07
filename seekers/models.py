@@ -10,7 +10,7 @@ from localflavor.us.models import USStateField
 from phonenumber_field.modelfields import PhoneNumberField
 
 
-def seeker_id_gen():
+def id_gen():
     digits = string.digits + string.ascii_lowercase
     id_int = random.randint(0, (36 ** 4) - 1)
     id_str = ''
@@ -28,19 +28,37 @@ CONTACT_PREFERENCES = [
     (3, 'Facebook')
 ]
 
-class Seeker(models.Model):
-    id = models.CharField(max_length=4, primary_key=True, default=seeker_id_gen, editable=False)
+class Human(models.Model):
+    id = models.CharField(max_length=4, primary_key=True, default=id_gen, editable=False)
     first_names = models.CharField(max_length=120)
     last_names = models.CharField(max_length=120)
     email = models.EmailField(blank=True)
     phone_number = PhoneNumberField(blank=True)
     city = models.CharField(max_length=30, blank=True)
     state = USStateField(default='NC')
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+    contact_preference = models.IntegerField(choices=CONTACT_PREFERENCES, blank=True, null=True)
+ 
+    def __str__(self):
+        return f'{self.first_names} {self.last_names}'
+    
+    def upgrade_to_seeker(self):
+        seeker = Seeker(human_ptr=self, 
+                        **{field.name: getattr(self, field.name) for field in type(self)._meta.fields})
+        seeker.save()
+        return seeker
+
+    class Meta:
+        verbose_name = 'Prospect'
+        ordering = ['last_names', 'first_names']
+        index_together = [('last_names', 'first_names')]
+
+
+class Seeker(Human):
     birthdate = models.DateField(blank=True, null=True)
     sober_anniversary = models.DateField(blank=True, null=True)
 
-    created = models.DateTimeField(auto_now_add=True)
-    updated = models.DateTimeField(auto_now=True)
     inactive_date = models.DateField(blank=True, null=True)
 
     def is_active(self):
@@ -53,14 +71,9 @@ class Seeker(models.Model):
     facebook_username = models.CharField(max_length=30, blank=True)
     facebook_alias = models.CharField(max_length=120, blank=True)
 
-    contact_preference = models.IntegerField(choices=CONTACT_PREFERENCES, blank=True, null=True)
-
     listener_trained = models.BooleanField('Listener trained?', editable=False, default=False)
     extra_care = models.BooleanField('Extra care program?', editable=False, default=False)
     extra_care_graduate = models.BooleanField('Extra care graduate?', editable=False, default=False)
-
-    def __str__(self):
-        return f'{self.first_names} {self.last_names}'
 
     @property
     def seeker_pairing(self):
@@ -83,10 +96,6 @@ class Seeker(models.Model):
             return pairing.right
         else:
             return pairing.left
-
-    class Meta:
-        ordering = ['last_names', 'first_names']
-        unique_together = [('last_names', 'first_names', 'birthdate')]
 
 class SeekerPairing(models.Model):
     left = models.ForeignKey(Seeker, on_delete=models.CASCADE, related_name='left_pair')
@@ -134,9 +143,10 @@ class SeekerMilestone(models.Model):
     
     class Meta:
         ordering = ['date']
+        verbose_name = 'Milestone'
 
-class SeekerNote(models.Model):
-    seeker = models.ForeignKey(Seeker, on_delete=models.CASCADE)
+class HumanNote(models.Model):
+    human = models.ForeignKey(Human, on_delete=models.CASCADE)
     created = models.DateTimeField(auto_now_add=True)
     added_by = models.ForeignKey('auth.User', on_delete=models.SET_NULL,
                                  editable=False, null=True)
@@ -154,5 +164,6 @@ class SeekerNote(models.Model):
     
     class Meta:
         ordering = ('-created',)
+        verbose_name = 'Note'
     
 

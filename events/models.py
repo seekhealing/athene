@@ -35,8 +35,8 @@ class Calendar(models.Model):
             self.name = calendar_obj['summary']
     
 
-class SeekerAttendance(models.Model):
-    seeker = models.ForeignKey('seekers.Seeker', on_delete=models.CASCADE)
+class HumanAttendance(models.Model):
+    human = models.ForeignKey('seekers.Human', verbose_name='Attendee', on_delete=models.CASCADE)
     calendar = models.ForeignKey(Calendar, on_delete=models.CASCADE)
     event_id = models.CharField(max_length=120, db_index=True)
     recurring_event_id = models.CharField(max_length=120, blank=True, db_index=True)
@@ -50,10 +50,12 @@ class SeekerAttendance(models.Model):
         return event_obj
     
     def __str__(self):
-        return f'{self.seeker} went to {self.event["summary"]}'
+        return f'{self.human} went to {self.event["summary"]}'
     
     class Meta:
-        unique_together = [('seeker', 'calendar', 'event_id')]
+        verbose_name = 'Event attendance'
+        verbose_name_plural = 'Event attendance'
+        unique_together = [('human', 'calendar', 'event_id')]
 
 CONTACT_PREFERENCES = [
     (1, 'Email'),

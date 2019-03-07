@@ -31,15 +31,15 @@ class CheckinModelForm(forms.ModelForm):
             raise forms.ValidationError('The event identifier given is invalid.')
 
     class Meta:
-        model = models.SeekerAttendance
-        fields = ['seeker', 'calendar', 'event_id', 'recurring_event_id']
+        model = models.HumanAttendance
+        fields = ['human', 'calendar', 'event_id', 'recurring_event_id']
 
 class DatePickerForm(forms.Form):
     event_date = forms.DateField(widget=AdminDateWidget())
 
-class SeekerAttendanceAdmin(admin.ModelAdmin):
-    model = models.SeekerAttendance
-    autocomplete_fields = ['seeker']
+class HumanAttendanceAdmin(admin.ModelAdmin):
+    model = models.HumanAttendance
+    autocomplete_fields = ['human']
     hidden_fields = ['calendar', 'event_id', 'recurring_event_id']
 
     def has_change_permission(self, request, obj=None):
@@ -118,5 +118,5 @@ class SeekerAttendanceAdmin(admin.ModelAdmin):
         return super().changeform_view(request, object_id, form_url, extra_context)
         
 
-admin.site.register(models.SeekerAttendance, SeekerAttendanceAdmin)
+admin.site.register(models.HumanAttendance, HumanAttendanceAdmin)
 admin.site.register(models.Calendar, CalendarAdmin)
