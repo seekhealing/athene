@@ -14,8 +14,17 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.http import HttpResponse, HttpResponseRedirect
+from django.urls import path, re_path
+
+robots_txt = HttpResponse('User-agent: *\nDisallow: /',
+                          content_type="text/plain")
+robots_txt['Cache-Control'] = 'max-age=1209600'
+index = HttpResponseRedirect('https://seekhealing.org/')
+index['Cache-Control'] = 'max-age=1209600'
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    re_path('^robots.txt$', lambda r: robots_txt),
+    path("", lambda r: index)
 ]
