@@ -147,6 +147,9 @@ class SeekerAdmin(HumanAdminMixin, admin.ModelAdmin):
             'fields': (('email', 'phone_number'), ('facebook_username',
                        'facebook_alias'), 'contact_preference')
         }),
+        ('Service Opportunities', {
+            'fields': (('ride_share', 'space_holder', 'activity_buddy', 'outreach'),),
+        }),
         ('Important dates', {
             'fields': (('birthdate', 'sober_anniversary'),),
         }),
@@ -167,7 +170,8 @@ class SeekerAdmin(HumanAdminMixin, admin.ModelAdmin):
                        'extra_care', 'extra_care_graduate', 
                        'created', 'updated']
     list_display = ['__str__', 'email', 'phone_number', 'listener_trained', 'extra_care', 'extra_care_graduate', 'is_active']
-    list_filter = ['listener_trained', 'extra_care', 'extra_care_graduate', IsActiveFilter]
+    list_filter = ['listener_trained', 'extra_care', 'extra_care_graduate', IsActiveFilter,
+                   'ride_share', 'space_holder', 'activity_buddy', 'outreach']
     search_fields = ['last_names', 'first_names', 'email', 'phone_number']
 
     def seeker_pair(self, instance):

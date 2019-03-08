@@ -71,9 +71,14 @@ class Seeker(Human):
     facebook_username = models.CharField(max_length=30, blank=True)
     facebook_alias = models.CharField(max_length=120, blank=True)
 
-    listener_trained = models.BooleanField('Listener trained?', editable=False, default=False)
-    extra_care = models.BooleanField('Extra care program?', editable=False, default=False)
-    extra_care_graduate = models.BooleanField('Extra care graduate?', editable=False, default=False)
+    listener_trained = models.BooleanField('Listener trained', editable=False, default=False)
+    extra_care = models.BooleanField('Extra care program', editable=False, default=False)
+    extra_care_graduate = models.BooleanField('Extra care graduate', editable=False, default=False)
+
+    ride_share = models.BooleanField(default=False)
+    space_holder = models.BooleanField(default=False)
+    activity_buddy = models.BooleanField(default=False)
+    outreach = models.BooleanField(default=False)
 
     @property
     def seeker_pairing(self):
