@@ -142,6 +142,7 @@ class SeekerAdmin(HumanAdminMixin, admin.ModelAdmin):
         (None, {
             'fields': ['show_id', ('first_names', 'last_names'), 
                        'street_address', ('city', 'state', 'zip_code'), 'seeker_pairs',
+                       'transportation',
                        'listener_trained', 'extra_care', 'extra_care_graduate'],
         }),
         ('Contact information', {

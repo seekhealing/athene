@@ -56,6 +56,11 @@ class Human(models.Model):
         ordering = ['last_names', 'first_names']
         index_together = [('last_names', 'first_names')]
 
+TRANSPORTATION_CHOICES = [
+    (1, 'Has a car'),
+    (2, 'Public transit/Lyft'),
+    (3, 'Homebound'),
+]
 
 class Seeker(Human):
     street_address = models.CharField(max_length=120, blank=True)
@@ -84,6 +89,9 @@ class Seeker(Human):
     activity_buddy = models.BooleanField(default=False)
     outreach = models.BooleanField(default=False)
 
+    transportation = models.IntegerField(choices=TRANSPORTATION_CHOICES,
+                                         blank=True, null=True)
+
     @property
     def active_seeker_pairings(self):
         return SeekerPairing.objects.filter(
@@ -106,7 +114,7 @@ class Seeker(Human):
         if not settings.GOOGLEMAPS_API: return []
         client = googlemaps.Client(key=settings.GOOGLEMAPS_API)
         ride_volunteers = type(self).objects.filter(
-            Q(ride_share=True), # or has-car
+            Q(ride_share=True) | Q(transportation=1),
             inactive_date__isnull=True,
             street_address__gt='').exclude(pk=self.id)
         result_rows = []
