@@ -98,7 +98,7 @@ class HumanAttendanceAdmin(admin.ModelAdmin):
                 date = localdate()
 
             calendar_objs = models.Calendar.objects.filter(inactive_date__isnull=True,
-                                                        track_attendance=True)
+                                                           track_attendance=True)
             events = []
             local_tz = timezone(settings.TIME_ZONE)
             start_dt = local_tz.localize(datetime.datetime.combine(date, datetime.time(0)))
