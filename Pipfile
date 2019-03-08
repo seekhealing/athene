@@ -23,6 +23,7 @@ python-dateutil = "*"
 dj-database-url = "*"
 gunicorn = "*"
 django-ckeditor = "*"
+googlemaps = "*"
 
 [requires]
 python_version = "3.7"

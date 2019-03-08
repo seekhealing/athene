@@ -1,12 +1,14 @@
 import random
 import string
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
 from django import template
 
 from ckeditor.fields import RichTextField
-from localflavor.us.models import USStateField
+import googlemaps
+from localflavor.us.models import USStateField, USZipCodeField
 from phonenumber_field.modelfields import PhoneNumberField
 
 
@@ -56,6 +58,8 @@ class Human(models.Model):
 
 
 class Seeker(Human):
+    street_address = models.CharField(max_length=120, blank=True)
+    zip_code = USZipCodeField(blank=True)
     birthdate = models.DateField(blank=True, null=True)
     sober_anniversary = models.DateField(blank=True, null=True)
 
@@ -97,6 +101,27 @@ class Seeker(Human):
             else:
                 pairs.append(pairing.left)
         return pairs
+    
+    def find_ride(self):
+        if not settings.GOOGLEMAPS_API: return []
+        client = googlemaps.Client(key=settings.GOOGLEMAPS_API)
+        ride_volunteers = type(self).objects.filter(
+            Q(ride_share=True), # or has-car
+            inactive_date__isnull=True,
+            street_address__gt='').exclude(pk=self.id)
+        result_rows = []
+        for chunk in [ride_volunteers[i:i + 25] for i in range(0, len(ride_volunteers), 25)]:
+            result = client.distance_matrix(
+                origins=f'{self.street_address}, {self.zip_code}',
+                destinations=[f'{obj.street_address}, {obj.zip_code}'
+                            for obj in ride_volunteers],
+                mode='driving', units='imperial'
+            )
+            result_rows += result['rows'][0]['elements']
+        result_map = zip(ride_volunteers, result_rows)
+        result_map = list(filter(lambda result: result[1]['status'] == 'OK', result_map))
+        result_map.sort(key=lambda result: result[1]['duration']['value'])
+        return [(result[0], result[1]) for result in result_map]
 
 class SeekerPairing(models.Model):
     left = models.ForeignKey(Seeker, on_delete=models.CASCADE, related_name='left_pair')

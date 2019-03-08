@@ -4,6 +4,7 @@ from django.contrib import admin
 from django.apps import apps
 from django import forms
 from django.http import HttpResponseRedirect
+from django.shortcuts import render
 from django.urls import reverse
 
 from . import models
@@ -130,14 +131,7 @@ class IsActiveFilter(admin.SimpleListFilter):
         elif self.value() == 'false':
             return queryset.filter(inactive_date__isnull=False)
         else:
-            return queryset
-
-class IsPairedFilter(admin.SimpleListFilter):
-    title = 'Paired'
-    parameter_name = 'is_paired'
-
-    def lookups(self, request, model_admin):
-        
+            return queryset        
 
 class SeekerAdmin(HumanAdminMixin, admin.ModelAdmin):
     inlines = [HumanNoteAdmin, SeekerMilestoneAdmin, 
@@ -147,7 +141,7 @@ class SeekerAdmin(HumanAdminMixin, admin.ModelAdmin):
     fieldsets = (
         (None, {
             'fields': ['show_id', ('first_names', 'last_names'), 
-                       ('city', 'state'), 'seeker_pairs',
+                       'street_address', ('city', 'state', 'zip_code'), 'seeker_pairs',
                        'listener_trained', 'extra_care', 'extra_care_graduate'],
         }),
         ('Contact information', {
@@ -183,6 +177,28 @@ class SeekerAdmin(HumanAdminMixin, admin.ModelAdmin):
 
     def seeker_pairs(self, instance):
         return ', '.join(map(str, instance.seeker_pairs))
+    
+    def get_urls(self):
+        from django.urls import path
+        urlpatterns = super().get_urls()
+        urlpatterns = [
+            path('<path:object_id>/ride/', 
+                 self.admin_site.admin_view(self.find_a_ride), 
+                 name='seekers_seeker_ride')
+        ] + urlpatterns
+        return urlpatterns
+
+    def find_a_ride(self, request, object_id):
+        seeker = self.get_object(request, object_id)
+        context = dict(
+            seeker=seeker,
+            rides=seeker.find_ride(),
+            is_popup=True
+        )
+        return render(request, 'admin/seekers/seeker/ride.html',
+                      context=context)
+    
+
 
 class SeekerPairingAdmin(admin.ModelAdmin):
     model = models.SeekerPairing

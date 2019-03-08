@@ -1,0 +1,26 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% block content %}
+
+<div class="module">
+<table>
+    <caption>Find a ride for {{ seeker }}</caption>
+    <tr>
+      <th scope="col">Seeker</th>
+      <th scope="col">Address</th>
+      <th scope="col">Travel time</th>
+      <th scope="col">Has car?</th>
+      <th scope="col">Offers rides?</th>
+    </tr>
+    {% for seeker, distance in rides %}
+    <tr>
+      <td><a href="{% url 'admin:seekers_seeker_change' seeker.pk %}">{{ seeker }}</a></td>
+      <td>{{ seeker.street_address }}, {{ seeker.zip_code }}</td>
+      <td>{{ distance.distance.text }}, {{ distance.duration.text }}</td>
+      <td><img src="{% static 'admin/img/icon-'%}{% if seeker.has_car %}yes{% else %}no{% endif %}.svg"></td>
+      <td><img src="{% static 'admin/img/icon-'%}{% if seeker.ride_share %}yes{% else %}no{% endif %}.svg"></td>
+    </tr>
+    {% endfor %}
+</table>
+</div>
+{% endblock %}

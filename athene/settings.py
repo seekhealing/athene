@@ -142,3 +142,5 @@ CKEDITOR_CONFIGS = {
         'allowedContent': 'p b strong i em u ul ol li a[!href]'
     }
 }
+
+GOOGLEMAPS_API = os.environ.get('GOOGLEMAPS_API', None)

@@ -1,0 +1,7 @@
+{% extends "admin/change_form.html" %}
+{% load static %}
+
+{% block object-tools-items %}
+<li><a href="{% url "admin:seekers_seeker_ride" object_id %}" class="related-widget-wrapper-link">Find a Ride</a></li>
+{{ block.super }}
+{% endblock %}
