@@ -27,24 +27,6 @@ class HumanNoteAdmin(admin.StackedInline):
     def has_change_permission(self, request, obj=None):
         return False
 
-class IsActiveFilter(admin.SimpleListFilter):
-    title = 'Active?'
-    parameter_name = 'is_active'
-
-    def lookups(self, request, model_admin):
-        return (
-            ('1', 'Yes'),
-            ('0', 'No')
-        )
-    
-    def queryset(self, request, queryset):
-        if self.value() == 'true':
-            return queryset.filter(inactive_date__isnull=True)
-        elif self.value() == 'false':
-            return queryset.filter(inactive_date__isnull=False)
-        else:
-            return queryset
-
 class HumanAdminMixin(object):
 
     def get_inline_instances(self, request, obj=None):
@@ -132,6 +114,31 @@ class HumanAdmin(HumanAdminMixin, admin.ModelAdmin):
 
     actions = ['enroll_as_seeker']
 
+class IsActiveFilter(admin.SimpleListFilter):
+    title = 'Active'
+    parameter_name = 'is_active'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('1', 'Yes'),
+            ('0', 'No')
+        )
+    
+    def queryset(self, request, queryset):
+        if self.value() == 'true':
+            return queryset.filter(inactive_date__isnull=True)
+        elif self.value() == 'false':
+            return queryset.filter(inactive_date__isnull=False)
+        else:
+            return queryset
+
+class IsPairedFilter(admin.SimpleListFilter):
+    title = 'Paired'
+    parameter_name = 'is_paired'
+
+    def lookups(self, request, model_admin):
+        
+
 class SeekerAdmin(HumanAdminMixin, admin.ModelAdmin):
     inlines = [HumanNoteAdmin, SeekerMilestoneAdmin, 
                SeekerCalendarSubscriptionAdmin,]
@@ -140,7 +147,7 @@ class SeekerAdmin(HumanAdminMixin, admin.ModelAdmin):
     fieldsets = (
         (None, {
             'fields': ['show_id', ('first_names', 'last_names'), 
-                       ('city', 'state'), 'seeker_pair',
+                       ('city', 'state'), 'seeker_pairs',
                        'listener_trained', 'extra_care', 'extra_care_graduate'],
         }),
         ('Contact information', {
@@ -166,7 +173,7 @@ class SeekerAdmin(HumanAdminMixin, admin.ModelAdmin):
             return shortened_fieldsets
         return super().get_fieldsets(request, obj)
 
-    readonly_fields = ['show_id', 'seeker_pair', 'listener_trained', 
+    readonly_fields = ['show_id', 'seeker_pairs', 'listener_trained', 
                        'extra_care', 'extra_care_graduate', 
                        'created', 'updated']
     list_display = ['__str__', 'email', 'phone_number', 'listener_trained', 'extra_care', 'extra_care_graduate', 'is_active']
@@ -174,8 +181,8 @@ class SeekerAdmin(HumanAdminMixin, admin.ModelAdmin):
                    'ride_share', 'space_holder', 'activity_buddy', 'outreach']
     search_fields = ['last_names', 'first_names', 'email', 'phone_number']
 
-    def seeker_pair(self, instance):
-        return instance.seeker_pair
+    def seeker_pairs(self, instance):
+        return ', '.join(map(str, instance.seeker_pairs))
 
 class SeekerPairingAdmin(admin.ModelAdmin):
     model = models.SeekerPairing

@@ -81,26 +81,22 @@ class Seeker(Human):
     outreach = models.BooleanField(default=False)
 
     @property
-    def seeker_pairing(self):
-        try:
-            pairing = SeekerPairing.objects.filter(
-                Q(left=self)|Q(right=self),
-                unpair_date__isnull=True
-            )[0]
-        except IndexError:
-            return None
-        else:
-            return pairing
+    def active_seeker_pairings(self):
+        return SeekerPairing.objects.filter(
+            Q(left=self)|Q(right=self),
+            unpair_date__isnull=True
+        )
     
     @property
-    def seeker_pair(self):
-        pairing = self.seeker_pairing
-        if not pairing:
-            return None
-        if pairing.left_id == self.id:
-            return pairing.right
-        else:
-            return pairing.left
+    def seeker_pairs(self):
+        pairings = self.active_seeker_pairings
+        pairs = []
+        for pairing in pairings:
+            if pairing.left_id == self.id:
+                pairs.append(pairing.right)
+            else:
+                pairs.append(pairing.left)
+        return pairs
 
 class SeekerPairing(models.Model):
     left = models.ForeignKey(Seeker, on_delete=models.CASCADE, related_name='left_pair')
@@ -111,12 +107,7 @@ class SeekerPairing(models.Model):
     def clean(self):
         if self.left_id == self.right_id:
             raise ValidationError({'right': 'You may not pair a seeker to themselves.'})
-        if not self.id and not self.unpair_date:
-            if self.left.seeker_pairing:
-                raise ValidationError({'left': 'This seeker already has an active pairing.'})
-            if self.right.seeker_pairing:
-                raise ValidationError({'right': 'This seeker already has an active pairing'})
-
+        
     def __str__(self):
         return f'{self.left} paired with {self.right}'
 
