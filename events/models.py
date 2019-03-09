@@ -1,9 +1,14 @@
+import logging
+logger = logging.getLogger(__name__)
+
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.template import Context, Template, loader
 from django.utils.functional import cached_property
+from django.utils.timezone import now
 from multiselectfield import MultiSelectField
 
-from . import google
+from . import google, twilio
 
 DAYS_OF_WEEK = [
     (0, 'Monday'),
@@ -21,14 +26,14 @@ class Calendar(models.Model):
     inactive_date = models.DateField(blank=True, null=True)
     track_attendance = models.BooleanField(default=False)
     send_autotext_days = MultiSelectField(choices=DAYS_OF_WEEK, blank=True)
-    send_autotext_time = models.TimeField(blank=True, null=True)
+    autotext_days_in_advance = models.PositiveIntegerField(null=True, blank=True)
 
     def __str__(self):
         return self.name
     
     def clean(self):
         try:
-            calendar_obj = google.client.get_calendar(self.calendar_id)
+            calendar_obj = google.calendar.get_calendar(self.calendar_id)
         except ValueError as e:
             raise ValidationError({'calendar_id', e.args[0]})
         else:
@@ -46,7 +51,7 @@ class HumanAttendance(models.Model):
     def event(self):
         if not self.event_id:
             return None
-        event_obj = google.client.get_event(self.calendar.calendar_id, self.event_id)
+        event_obj = google.calendar.get_event(self.calendar.calendar_id, self.event_id)
         return event_obj
     
     def __str__(self):
@@ -70,6 +75,26 @@ class SeekerCalendarSubscription(models.Model):
 
     def __str__(self):
         return f'{self.seeker} subscribed to {self.calendar}'
-    
+
+    def send_events_summary(self, events, test=False):
+        logger.debug(f'Sending to event summary to {self.seeker} via {self.get_contact_method_display()}')
+        context = dict(
+            seeker=self.seeker,
+            events=events,
+            calendar=self.calendar
+        )
+        template_path = f'events/autotext/{self.get_contact_method_display().lower()}.txt'
+        template_obj = loader.get_template(template_path)
+        content = template_obj.render(context)
+        if self.contact_method == 1: # email
+            today = Template('{{ timestamp|date:"DATE_FORMAT" }}').render(
+                Context(dict(timestamp=now()))
+            )
+            google.gmail.send_email('info@seekhealing.org', self.seeker.email,
+                                    f'Upcoming {self.calendar.name} - {today}',
+                                    content, test=test)
+        elif self.contact_method == 2: # sms
+            twilio.sms.send_text(str(self.seeker.phone_number), content, test=test)
+
     class Meta:
         unique_together = [('seeker', 'calendar')]

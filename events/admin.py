@@ -9,7 +9,7 @@ from django import forms
 from pytz import timezone
 
 from . import models
-from .google import client
+from .google import calendar as client
 
 class SeekerCalendarSubscriptionAdmin(admin.TabularInline):
     model = models.SeekerCalendarSubscription

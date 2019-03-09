@@ -4,3 +4,4 @@ events/credentials.json
 events/token.pickle
 staticfiles/
 .env
+local/

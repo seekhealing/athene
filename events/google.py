@@ -1,6 +1,9 @@
 import base64
 import datetime
+from email.mime.text import MIMEText
+from email import encoders
 import json
+import logging
 import os
 import pickle
 
@@ -9,6 +12,8 @@ from googleapiclient import errors
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from pytz import utc
+
+logger = logging.getLogger(__name__)
 
 class Calendar(object):
     def __init__(self):
@@ -70,7 +75,35 @@ class Calendar(object):
             raise ValueError(f'Invalid event lookup: {e.args}')
         return result.get('items', [])
 
+calendar = Calendar()
 
+class Gmail(object):
+    def __init__(self):
+        if os.environ.get('GOOGLE_TOKEN'):
+            self.token = pickle.loads(base64.decodebytes(bytes(os.environ['GOOGLE_TOKEN'], 'utf-8')))
+        else:
+            token_file = os.path.join(os.path.dirname(__file__), 'token.pickle')
+            self.token = pickle.load(open(token_file, 'rb'))
+        if not self.token or not self.token.valid:
+            if self.token and self.token.expired and self.token.refresh_token:
+                self.token.refresh(Request())
+            else:
+                raise ValueError('Token is not valid.')
+        self.service = build('gmail', 'v1', credentials=self.token)
 
+    def send_email(self, sender, recipient, subject, content, test=False):
+        message = MIMEText(content)
+        message['to'] = recipient
+        message['from'] = sender
+        message['subject'] = subject
+        payload = {'raw': base64.urlsafe_b64encode(message.as_string().encode('utf-8')).decode('ascii')}
+        try:
+            logger.info('Sending email to %s', recipient)
+            if test:
+                logger.debug('%s', content)
+            else:
+                self.service.users().messages().send(userId='me', body=payload).execute()
+        except errors.HttpError as e:
+            logger.exception('Error communicating with Gmail!')
 
-client = Calendar()
+gmail = Gmail()

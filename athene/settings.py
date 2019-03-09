@@ -118,6 +118,37 @@ USE_L10N = False
 
 USE_TZ = True
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': { 
+        'standard': { 
+            'format': '%(asctime)s [%(levelname)s] %(name)s: %(message)s'
+        },
+    },
+    'handlers': { 
+        'default': { 
+            'level': 'DEBUG' if DEBUG else 'INFO',
+            'formatter': 'standard',
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': { 
+        'athene': { 
+            'handlers': ['default'],
+            'level': 'DEBUG',
+        },
+        'seekers': { 
+            'handlers': ['default'],
+            'level': 'DEBUG',
+        },
+        'events': { 
+            'handlers': ['default'],
+            'level': 'DEBUG',
+        },
+    } 
+}
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
