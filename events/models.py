@@ -87,6 +87,9 @@ class SeekerCalendarSubscription(models.Model):
         template_obj = loader.get_template(template_path)
         content = template_obj.render(context)
         if self.contact_method == 1: # email
+            if not self.seeker.email:
+                logger.warning(f'Seeker {self.seeker} is set to receive {self.calendar} via email but has no email address')
+                return
             today = Template('{{ timestamp|date:"DATE_FORMAT" }}').render(
                 Context(dict(timestamp=now()))
             )
@@ -94,6 +97,9 @@ class SeekerCalendarSubscription(models.Model):
                                     f'Upcoming {self.calendar.name} - {today}',
                                     content, test=test)
         elif self.contact_method == 2: # sms
+            if not self.seeker.phone_number:
+                logger.warning(f'Seeker {self.seeker} is set to receive {self.calendar} via SMS but has no phone number')
+                return
             twilio.sms.send_text(str(self.seeker.phone_number), content, test=test)
 
     class Meta:
