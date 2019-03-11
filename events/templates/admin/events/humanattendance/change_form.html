@@ -4,6 +4,11 @@
 {% block extrahead %}
 {{ block.super }}
 {{ date_form.media }}
+<style>
+@media (max-width: 767px) {
+.aligned .form-row.hidden {display: none;}
+}
+</style>
 {% endblock %}
 
 {% block content %}

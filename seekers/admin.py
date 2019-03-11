@@ -71,7 +71,10 @@ class HumanAdmin(HumanAdminMixin, admin.ModelAdmin):
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        return qs.filter(seeker__isnull=True)
+        if request.path.endswith('/autocomplete/'):
+            return qs
+        else:
+            return qs.filter(seeker__isnull=True)
 
     fieldsets = (
         (None, {
