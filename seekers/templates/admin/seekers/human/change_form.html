@@ -4,3 +4,7 @@
 <li><a href="{% url 'admin:seekers_human_enroll' object_id %}">Enroll as Seeker</a></li>
 {{ block.super }}
 {% endblock %}
+
+{% block after_field_sets %}
+{% include "admin/seekers/includes/mailchimp.html" %}
+{% endblock %}

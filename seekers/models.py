@@ -1,3 +1,6 @@
+import logging
+logger = logging.getLogger(__name__)
+
 import random
 import string
 from django.conf import settings
@@ -10,6 +13,8 @@ from ckeditor.fields import RichTextField
 import googlemaps
 from localflavor.us.models import USStateField, USZipCodeField
 from phonenumber_field.modelfields import PhoneNumberField
+
+from . import mailchimp
 
 
 def id_gen():
@@ -49,6 +54,13 @@ class Human(models.Model):
         seeker = Seeker(human_ptr=self, 
                         **{field.name: getattr(self, field.name) for field in type(self)._meta.fields})
         seeker.save()
+        if self.email:
+            status = mailchimp.client.subscription_status(self.email)
+            if status['status'] == 'subscribed':
+                logger.info('Adding default Seeker tags to mailing list subscription.')
+                current_tags = [tag['name'] for tag in status['tags']]
+                mailchimp.client.update_user_tags(
+                    self.email, list(set(current_tags).union(set(settings.MAILCHIMP_DEFAULT_SEEKER_TAGS))))
         return seeker
 
     class Meta:

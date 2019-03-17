@@ -1,0 +1,23 @@
+{% if change and original.email %}
+<div>
+    <fieldset class="module aligned">
+    <h2>Mailing list subscription</h2>
+    <div class="form-row">
+        <div class="fieldBox">
+            <label>Current status</label>
+            <div class="readonly">{{ mailchimp_status.status|capfirst }}{% if mailchimp_status.status == 'unsubscribed' %}- {{ mailchimp_status.unsubscribe_reason }}{% endif %}</div>
+        </div>
+    </div>
+    {% if mailchimp_status.status == 'subscribed' %}
+    <div class="form-row">
+        {% for field in mailchimp_form %}
+        <div class="fieldBox">
+            {{ field.label_tag }}
+            {{ field }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    </fieldset>
+</div>
+{% endif %}
