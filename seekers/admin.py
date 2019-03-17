@@ -12,7 +12,7 @@ from django.shortcuts import render
 from django.urls import reverse
 
 from . import models, mailchimp
-from events.admin import SeekerCalendarSubscriptionAdmin
+from events.admin import HumanCalendarSubscriptionAdmin
 
 class SeekerMilestoneAdmin(admin.TabularInline):
     model = models.SeekerMilestone
@@ -96,7 +96,7 @@ class HumanAdminMixin(object):
             instance.save()
 
 class HumanAdmin(HumanAdminMixin, admin.ModelAdmin):
-    inlines = [HumanNoteAdmin,]
+    inlines = [HumanNoteAdmin, HumanCalendarSubscriptionAdmin]
     model = models.Human
 
     def get_urls(self):
@@ -185,7 +185,7 @@ class IsActiveFilter(admin.SimpleListFilter):
 
 class SeekerAdmin(HumanAdminMixin, admin.ModelAdmin):
     inlines = [HumanNoteAdmin, SeekerMilestoneAdmin, 
-               SeekerCalendarSubscriptionAdmin,]
+               HumanCalendarSubscriptionAdmin,]
 
     model = models.Seeker
     fieldsets = (

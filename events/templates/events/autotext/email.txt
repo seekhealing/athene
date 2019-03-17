@@ -1,4 +1,4 @@
-{% autoescape off %}Hello, {{ seeker }}!
+{% autoescape off %}Hello, {{ human }}!
 
 This is your bi-weekly reminder about upcoming {{ calendar.name }}!
 

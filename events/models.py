@@ -68,18 +68,18 @@ CONTACT_PREFERENCES = [
     # (3, 'Facebook')
 ]
 
-class SeekerCalendarSubscription(models.Model):
-    seeker = models.ForeignKey('seekers.Seeker', on_delete=models.CASCADE)
+class HumanCalendarSubscription(models.Model):
+    human = models.ForeignKey('seekers.Human', on_delete=models.CASCADE)
     calendar = models.ForeignKey(Calendar, on_delete=models.CASCADE)
     contact_method = models.IntegerField(choices=CONTACT_PREFERENCES)
 
     def __str__(self):
-        return f'{self.seeker} subscribed to {self.calendar}'
+        return f'{self.human} subscribed to {self.calendar}'
 
     def send_events_summary(self, events, test=False):
-        logger.debug(f'Sending to event summary to {self.seeker} via {self.get_contact_method_display()}')
+        logger.debug(f'Sending to event summary to {self.human} via {self.get_contact_method_display()}')
         context = dict(
-            seeker=self.seeker,
+            human=self.human,
             events=events,
             calendar=self.calendar
         )
@@ -87,20 +87,21 @@ class SeekerCalendarSubscription(models.Model):
         template_obj = loader.get_template(template_path)
         content = template_obj.render(context)
         if self.contact_method == 1: # email
-            if not self.seeker.email:
-                logger.warning(f'Seeker {self.seeker} is set to receive {self.calendar} via email but has no email address')
+            if not self.human.email:
+                logger.warning(f'Human {self.human} is set to receive {self.calendar} via email but has no email address')
                 return
             today = Template('{{ timestamp|date:"DATE_FORMAT" }}').render(
                 Context(dict(timestamp=now()))
             )
-            google.gmail.send_email('info@seekhealing.org', self.seeker.email,
+            google.gmail.send_email('info@seekhealing.org', self.human.email,
                                     f'Upcoming {self.calendar.name} - {today}',
                                     content, test=test)
         elif self.contact_method == 2: # sms
-            if not self.seeker.phone_number:
-                logger.warning(f'Seeker {self.seeker} is set to receive {self.calendar} via SMS but has no phone number')
+            if not self.human.phone_number:
+                logger.warning(f'Human {self.human} is set to receive {self.calendar} via SMS but has no phone number')
                 return
-            twilio.sms.send_text(str(self.seeker.phone_number), content, test=test)
+            twilio.sms.send_text(str(self.human.phone_number), content, test=test)
 
     class Meta:
-        unique_together = [('seeker', 'calendar')]
+        unique_together = [('human', 'calendar')]
+        verbose_name = 'Calendar subscription'

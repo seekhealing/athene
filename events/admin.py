@@ -11,8 +11,8 @@ from pytz import timezone
 from . import models
 from .google import calendar as client
 
-class SeekerCalendarSubscriptionAdmin(admin.TabularInline):
-    model = models.SeekerCalendarSubscription
+class HumanCalendarSubscriptionAdmin(admin.TabularInline):
+    model = models.HumanCalendarSubscription
     extra = 1
     classes = ['collapse']
 

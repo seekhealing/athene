@@ -9,7 +9,7 @@ from dateutil.parser import parse
 import pytz
 
 from events import models, google
-from seekers.models import Seeker
+from seekers.models import Human
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +17,7 @@ class Command(BaseCommand):
     help = 'Send the calendar autotext for the day'
 
     def add_arguments(self, parser):
-        parser.add_argument('--test-seeker', action='store', dest='test_seeker',
+        parser.add_argument('--test-human', action='store', dest='test_human',
                             help='Username of a user to send a test message to.')
         parser.add_argument('--dry-run', action='store_true', dest='dry_run', default=False,
                             help='Do everything except actually send anything.')
@@ -41,7 +41,7 @@ class Command(BaseCommand):
                 logger.info(f'Skipping calendar {calendar_obj} - autotext disabled.')
                 continue
             if now().strftime('%w') not in calendar_obj.send_autotext_days:
-                if options['test_seeker']:
+                if options['test_human']:
                     logger.info(f'Ordinarily {calendar_obj} would not send a text today, but this is a test.')
                 else:
                     logger.info(f'Skipping calendar {calendar_obj} - autotext does not run on {now().strftime("%A")}')
@@ -52,17 +52,17 @@ class Command(BaseCommand):
                 logger.warning(f'No events in the next {calendar_obj.autotext_days_in_advance} days for {calendar_obj}')
                 continue
             normalized_events = [self.normalize_event(event) for event in events]
-            if options['test_seeker']:
-                test_user = User.objects.get(username=options['test_seeker'])
-                test_seeker = Seeker.objects.get(email=test_user.email)
-                logger.info(f'Sending test messages to {test_seeker}')
-                subscribers = [models.SeekerCalendarSubscription(
+            if options['test_human']:
+                test_user = User.objects.get(username=options['test_human'])
+                test_human = Human.objects.get(email=test_user.email)
+                logger.info(f'Sending test messages to {test_human}')
+                subscribers = [models.HumanCalendarSubscription(
                     calendar=calendar_obj,
-                    seeker=test_seeker,
+                    human=test_human,
                     contact_method=contact_method
                 ) for contact_method, _ in models.CONTACT_PREFERENCES]
             else:
-                subscribers = calendar_obj.seekercalendarsubscription_set.all()
+                subscribers = calendar_obj.humancalendarsubscription_set.all()
             for subscriber in subscribers:
                 subscriber.send_events_summary(normalized_events, test=options['dry_run'])
 
