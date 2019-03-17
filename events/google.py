@@ -16,7 +16,12 @@ from pytz import utc
 logger = logging.getLogger(__name__)
 
 class Calendar(object):
-    def __init__(self):
+    _service = None
+    
+    @property
+    def service(self):
+        if self._service:
+            return self._service
         if os.environ.get('GOOGLE_TOKEN'):
             self.token = pickle.loads(base64.decodebytes(bytes(os.environ['GOOGLE_TOKEN'], 'utf-8')))
         else:
@@ -27,7 +32,8 @@ class Calendar(object):
                 self.token.refresh(Request())
             else:
                 raise ValueError('Token is not valid.')
-        self.service = build('calendar', 'v3', credentials=self.token)
+        self._service = build('calendar', 'v3', credentials=self.token)
+        return self._service
     
     def get_calendar(self, calendar_id):
         try:
@@ -78,7 +84,12 @@ class Calendar(object):
 calendar = Calendar()
 
 class Gmail(object):
-    def __init__(self):
+    _service = None
+
+    @property
+    def service(self):
+        if self._service:
+            return self._service
         if os.environ.get('GOOGLE_TOKEN'):
             self.token = pickle.loads(base64.decodebytes(bytes(os.environ['GOOGLE_TOKEN'], 'utf-8')))
         else:
@@ -89,7 +100,8 @@ class Gmail(object):
                 self.token.refresh(Request())
             else:
                 raise ValueError('Token is not valid.')
-        self.service = build('gmail', 'v1', credentials=self.token)
+        self._service = build('gmail', 'v1', credentials=self.token)
+        return self._service
 
     def send_email(self, sender, recipient, subject, content, test=False):
         message = MIMEText(content)
