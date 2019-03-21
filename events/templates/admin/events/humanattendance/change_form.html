@@ -65,11 +65,11 @@
     <caption>Seekers already checked in</caption>
     {% for checkin in already_checked_in %}
     <tr>
-      <th scope="row">{{ checkin.seeker }}</th>
+      <th scope="row">{{ checkin.human }}</th>
     </tr>
     {% empty %}
     <tr>
-      <td><em>No seekers checked into this event yet.</em></td>
+      <td><em>No humans checked into this event yet.</em></td>
     {% endfor %}
   </table>
 </div>
