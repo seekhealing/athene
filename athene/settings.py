@@ -187,3 +187,12 @@ import json
 MAILCHIMP_TAGS = json.loads(os.environ.get('MAILCHIMP_TAGS'))
 MAILCHIMP_DEFAULT_HUMAN_TAGS = json.loads(os.environ.get('MAILCHIMP_DEFAULT_HUMAN_TAGS'))
 MAILCHIMP_DEFAULT_SEEKER_TAGS = json.loads(os.environ.get('MAILCHIMP_DEFAULT_SEEKER_TAGS'))
+
+if 'SENTRY_DSN' in os.environ:
+    import sentry_sdk
+    from sentry_sdk.integrations.django import DjangoIntegration
+
+    sentry_sdk.init(
+        dsn=os.environ['SENTRY_DSN'],
+        integrations=[DjangoIntegration()]
+    )
