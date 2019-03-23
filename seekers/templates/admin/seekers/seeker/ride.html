@@ -17,8 +17,8 @@
       <td><a href="{% url 'admin:seekers_seeker_change' seeker.pk %}">{{ seeker }}</a></td>
       <td>{{ seeker.street_address }}, {{ seeker.zip_code }}</td>
       <td>{{ distance.distance.text }}, {{ distance.duration.text }}</td>
-      <td><img src="{% static 'admin/img/icon-'%}{% if seeker.transportation == 1 %}yes{% else %}no{% endif %}.svg"></td>
-      <td><img src="{% static 'admin/img/icon-'%}{% if seeker.ride_share %}yes{% else %}no{% endif %}.svg"></td>
+      <td><img src="{% if seeker.transportation == 1 %}{% static 'admin/img/icon-yes.svg'%}{% else %}{% static 'admin/img/icon-no.svg'%}{% endif %}"></td>
+      <td><img src="{% if seeker.ride_share %}{% static 'admin/img/icon-yes.svg'%}{% else %}{% static 'admin/img/icon-no.svg'%}{% endif %}"></td>
     </tr>
     {% endfor %}
 </table>
