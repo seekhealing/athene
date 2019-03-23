@@ -6,10 +6,17 @@ logger = logging.getLogger(__name__)
 from django.contrib import admin
 from django.conf import settings
 from django.apps import apps
+from django.db.models import Count, Sum, Avg, Q
 from django import forms
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
+from django.template.response import TemplateResponse
 from django.urls import reverse
+from django.utils.decorators import method_decorator
+from django.utils import timezone
+from django.views.decorators.csrf import csrf_protect
+
+csrf_protect_m = method_decorator(csrf_protect)
 
 from . import models, mailchimp
 from events.admin import HumanCalendarSubscriptionAdmin
@@ -248,14 +255,75 @@ class SeekerAdmin(HumanAdminMixin, admin.ModelAdmin):
         )
         return render(request, 'admin/seekers/seeker/ride.html',
                       context=context)
-    
-
 
 class SeekerPairingAdmin(admin.ModelAdmin):
     model = models.SeekerPairing
     list_display = ('left', 'right', 'pair_date', 'unpair_date')
 
+class SeekerBenefitAdmin(admin.TabularInline):
+    model = models.SeekerBenefit
+    extra = 1
+    autocomplete_fields = ['benefit_type']
+
+class SeekerBenefitProxyAdmin(admin.ModelAdmin):
+    model = models.SeekerBenefitProxy
+    inlines = [SeekerBenefitAdmin]
+    fieldsets = ((None, {'fields': tuple()}),)
+
+    def changeform_view(self, request, object_id=None, form_url='', extra_context=None):
+        extra_context = extra_context or {}
+        extra_context['benefit_types'] = dict(models.SeekerBenefitType.objects.all().values_list('id', 'default_cost'))
+        return super().changeform_view(request, object_id, form_url, extra_context)
+    
+    @csrf_protect_m
+    def changelist_view(self, request, extra_context=None):
+        today = timezone.now().date()
+        
+        benefit_types = models.SeekerBenefitType.objects.all()
+        this_month_filter = Q(seekerbenefit__date__month=today.month)
+        this_year_filter = Q(seekerbenefit__date__year=today.year)
+
+        def _annotated(qs, filter_q):
+            to_return = qs.annotate(
+                used=Count('seekerbenefit', filter=filter_q))
+            to_return = to_return.annotate(
+                total=Sum('seekerbenefit__cost', filter=filter_q))
+            to_return = to_return.annotate(
+                average_cost=Avg('seekerbenefit__cost', filter=filter_q))
+            return to_return
+        
+        this_month = _annotated(benefit_types, this_month_filter)
+        this_year = _annotated(benefit_types, this_year_filter)
+        all_time = _annotated(benefit_types, None)
+
+        seekers_this_month = models.SeekerBenefit.objects.filter(date__month=today.month)\
+            .aggregate(count=Count('seeker'))['count']
+        total_spent_this_month = models.SeekerBenefit.objects.filter(date__month=today.month)\
+            .aggregate(total=Sum('cost'))['total']
+        avg_per_seeker = total_spent_this_month / seekers_this_month
+
+        cost_per_seeker = _annotated(models.Seeker.objects.all(), this_month_filter)
+        cost_per_seeker = cost_per_seeker.filter(used__gt=0).order_by('-used', '-total')
+
+        return TemplateResponse(
+            request, 'admin/seekers/seekerbenefitproxy/change_list.html',
+            context=dict(
+                today=today,
+                by_benefit_type=zip(this_month, this_year, all_time),
+                seekers_this_month=seekers_this_month,
+                total_spent_this_month=total_spent_this_month,
+                avg_per_seeker=avg_per_seeker,
+                cost_per_seeker=cost_per_seeker,
+                cl=self.get_changelist_instance(request),
+
+            )
+        )
+
+class SeekerBenefitTypeAdmin(admin.ModelAdmin):
+    search_fields = ['name']
 
 admin.site.register(models.Human, HumanAdmin)
 admin.site.register(models.Seeker, SeekerAdmin)
 admin.site.register(models.SeekerPairing, SeekerPairingAdmin)
+admin.site.register(models.SeekerBenefitProxy, SeekerBenefitProxyAdmin)
+admin.site.register(models.SeekerBenefitType, SeekerBenefitTypeAdmin)

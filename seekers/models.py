@@ -1,6 +1,7 @@
 import logging
 logger = logging.getLogger(__name__)
 
+import decimal
 import random
 import string
 from django.conf import settings
@@ -8,6 +9,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
 from django import template
+from django.utils import timezone
 
 from ckeditor.fields import RichTextField
 import googlemaps
@@ -207,4 +209,42 @@ class HumanNote(models.Model):
         ordering = ('-created',)
         verbose_name = 'Note'
     
+class SeekerBenefitType(models.Model):
+    name = models.CharField(max_length=120)
+    default_cost = models.DecimalField(decimal_places=2, max_digits=5, blank=True, default=decimal.Decimal("0"))
+
+    def __str__(self):
+        return self.name
+    
+    class Meta:
+        ordering = ('name',)
+
+class SeekerBenefit(models.Model):
+    seeker = models.ForeignKey(Seeker, on_delete=models.CASCADE)
+    benefit_type = models.ForeignKey(SeekerBenefitType, on_delete=models.CASCADE)
+    cost = models.DecimalField(decimal_places=2, max_digits=5)
+    date = models.DateField()
+
+    def __str__(self):
+        return f'{self.seeker} @ {self.benefit_type} on {self.date}'
+    
+    class Meta:
+        ordering = ('-date',)
+
+# A proxy model to register a special admin class just for managing seeker benefits
+class SeekerBenefitProxy(Seeker):
+
+    def this_month(self):
+        qs = self.seekerbenefit_set.filter(date__month=timezone.now().month).select_related()
+        result = qs.aggregate(total_cost=models.Sum('cost'))
+        return result['total_cost']
+    
+    def all_time(self):
+        qs = self.seekerbenefit_set.all().select_related()
+        result = qs.aggregate(total_cost=models.Sum('cost'))
+        return result['total_cost']
+
+    class Meta:
+        proxy = True
+        verbose_name = 'Seeker benefit report'
 

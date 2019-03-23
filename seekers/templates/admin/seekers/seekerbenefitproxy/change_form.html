@@ -1,0 +1,39 @@
+{% extends "admin/change_form.html" %}
+
+{% block content_title %}<h1>Seeker Benefits for {{ original }}</h1>{% endblock %}
+
+{% block after_field_sets %}
+<div>
+    <fieldset class="module inline-group">
+    <h2>Seeker Benefit Cost Analysis</h2>
+    <div class="form-row">
+        <div class="fieldBox">
+            <label>This month</label>
+            <div class="readonly">$ {{ original.this_month|default:"0" }}</div>
+        </div>
+        <div class="fieldBox">
+            <label>All time</label>
+            <div class="readonly">$ {{ original.all_time|default:"0" }}</div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block admin_change_form_document_ready %}
+{{ benefit_types|json_script:"cost-map" }}
+<script>
+(function($) {
+    $(document).ready(function() {
+        var cost_map = JSON.parse(document.getElementById("cost-map").textContent);
+        console.debug('Loaded.');
+        $("td.field-benefit_type select").change(function() {
+            console.debug('Ran');
+            var cost_id = $(this).attr("id").replace("benefit_type", "cost");
+            console.debug(cost_id);
+            $('#'+cost_id).val(cost_map[parseInt($(this).val())]);
+        });
+    });
+})(django.jQuery);
+</script>
+{{ block.super }}
+{% endblock %}
