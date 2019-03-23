@@ -1,4 +1,5 @@
 import copy
+from decimal import Decimal
 import logging
 
 logger = logging.getLogger(__name__)
@@ -299,8 +300,11 @@ class SeekerBenefitProxyAdmin(admin.ModelAdmin):
         seekers_this_month = models.SeekerBenefit.objects.filter(date__month=today.month)\
             .aggregate(count=Count('seeker'))['count']
         total_spent_this_month = models.SeekerBenefit.objects.filter(date__month=today.month)\
-            .aggregate(total=Sum('cost'))['total']
-        avg_per_seeker = total_spent_this_month / seekers_this_month
+            .aggregate(total=Sum('cost'))['total'] or Decimal("0")
+        if seekers_this_month:
+            avg_per_seeker = total_spent_this_month / seekers_this_month
+        else:
+            avg_per_seeker = Decimal("0")
 
         cost_per_seeker = _annotated(models.Seeker.objects.all(), this_month_filter)
         cost_per_seeker = cost_per_seeker.filter(used__gt=0).order_by('-used', '-total')
