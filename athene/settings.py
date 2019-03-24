@@ -198,3 +198,7 @@ if 'SENTRY_DSN' in os.environ:
         dsn=os.environ['SENTRY_DSN'],
         integrations=[DjangoIntegration()]
     )
+
+SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
+SESSION_COOKIE_HTTPONLY = True
+
