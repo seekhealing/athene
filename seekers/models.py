@@ -64,6 +64,13 @@ class Human(models.Model):
                 mailchimp.client.update_user_tags(
                     self.email, list(set(current_tags).union(set(settings.MAILCHIMP_DEFAULT_SEEKER_TAGS))))
         return seeker
+    
+    def mark_as_community_partner(self):
+        community_partner = CommunityPartner(
+            human_ptr=self,
+            **{field.name: getattr(self, field.name) for field in type(self)._meta.fields})
+        community_partner.save()
+        return community_partner
 
     class Meta:
         verbose_name = 'Prospect'
@@ -248,3 +255,5 @@ class SeekerBenefitProxy(Seeker):
         proxy = True
         verbose_name = 'Seeker benefit report'
 
+class CommunityPartner(Human):
+    organization = models.CharField(max_length=120, blank=True)

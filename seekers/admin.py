@@ -102,15 +102,6 @@ class HumanAdminMixin(object):
                 if not instance.id:
                     instance.added_by = request.user
             instance.save()
-    
-    def downgrade_to_prospect(self, request, queryset):
-        for seeker in queryset:
-            seeker.delete(keep_parents=True)
-        self.message_user(request, f'{len(queryset)} seeker(s) downgraded to Prospects.')
-    downgrade_to_prospect.short_description = 'Downgrade to Prospect'
-
-    actions = ['downgrade_to_prospect']
-
 
 class HumanAdmin(HumanAdminMixin, admin.ModelAdmin):
     inlines = [HumanNoteAdmin, HumanCalendarSubscriptionAdmin]
@@ -137,7 +128,7 @@ class HumanAdmin(HumanAdminMixin, admin.ModelAdmin):
         if request.path.endswith('/autocomplete/'):
             return qs
         else:
-            return qs.filter(seeker__isnull=True)
+            return qs.filter(seeker__isnull=True, communitypartner__isnull=True)
 
     fieldsets = (
         (None, {
@@ -180,7 +171,15 @@ class HumanAdmin(HumanAdminMixin, admin.ModelAdmin):
         self.message_user(request, f'{len(queryset)} prospect(s) enrolled as Seekers.')
     enroll_as_seeker.short_description = 'Enroll as Seeker'
 
-    actions = ['enroll_as_seeker']
+    def mark_as_community_partner(self, request, queryset):
+        for obj in queryset:
+            logger.info(f'Migrating {obj} from prospect to Community Partner.')
+            obj.mark_as_community_partner()
+        self.message_user(request, f'{len(queryset)} prospect(s) marked as Community Partners.')
+    mark_as_community_partner.short_description = 'Mark as Community Partner'
+
+
+    actions = ['enroll_as_seeker', 'mark_as_community_partner']
 
 class IsActiveFilter(admin.SimpleListFilter):
     title = 'Active'
@@ -238,7 +237,8 @@ class SeekerAdmin(HumanAdminMixin, admin.ModelAdmin):
     readonly_fields = ['show_id', 'seeker_pairs', 'listener_trained', 
                        'extra_care', 'extra_care_graduate', 
                        'created', 'updated']
-    list_display = ['__str__', 'email', 'phone_number', 'listener_trained', 'extra_care', 'extra_care_graduate', 'is_active']
+    list_display = ['first_names', 'last_names', 'email', 'phone_number', 'listener_trained', 'extra_care', 'extra_care_graduate', 'is_active']
+    list_display_links = ['first_names', 'last_names']
     list_filter = ['listener_trained', 'extra_care', 'extra_care_graduate', IsActiveFilter,
                    'ride_share', 'space_holder', 'activity_buddy', 'outreach']
     search_fields = ['last_names', 'first_names', 'email', 'phone_number']
@@ -265,6 +265,16 @@ class SeekerAdmin(HumanAdminMixin, admin.ModelAdmin):
         )
         return render(request, 'admin/seekers/seeker/ride.html',
                       context=context)
+    
+    def downgrade_to_prospect(self, request, queryset):
+        for seeker in queryset:
+            seeker.delete(keep_parents=True)
+        self.message_user(request, f'{len(queryset)} seeker(s) downgraded to Prospects.')
+    downgrade_to_prospect.short_description = 'Downgrade to Prospect'
+
+    actions = ['downgrade_to_prospect']
+
+
 
 class SeekerPairingAdmin(admin.ModelAdmin):
     model = models.SeekerPairing
@@ -335,8 +345,27 @@ class SeekerBenefitProxyAdmin(admin.ModelAdmin):
 class SeekerBenefitTypeAdmin(admin.ModelAdmin):
     search_fields = ['name']
 
+class CommunityPartnerAdmin(HumanAdminMixin, admin.ModelAdmin):
+    model = models.CommunityPartner
+    inlines = [HumanNoteAdmin, HumanCalendarSubscriptionAdmin]
+
+    fieldsets = (
+        (None, {
+            'fields': ['show_id', ('first_names', 'last_names'), 
+                       ('city', 'state'), 'organization'],
+        }),
+        ('Contact information', {
+            'fields': (('email', 'phone_number'), 'contact_preference')
+        }), 
+        ('Record history', {
+            'fields': (('created', 'updated'),),
+        }),
+    )
+    readonly_fields = ['show_id', 'created', 'updated']
+
 admin.site.register(models.Human, HumanAdmin)
 admin.site.register(models.Seeker, SeekerAdmin)
+admin.site.register(models.CommunityPartner, CommunityPartnerAdmin)
 admin.site.register(models.SeekerPairing, SeekerPairingAdmin)
 admin.site.register(models.SeekerBenefitProxy, SeekerBenefitProxyAdmin)
 admin.site.register(models.SeekerBenefitType, SeekerBenefitTypeAdmin)
