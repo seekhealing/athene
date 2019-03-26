@@ -102,6 +102,15 @@ class HumanAdminMixin(object):
                 if not instance.id:
                     instance.added_by = request.user
             instance.save()
+    
+    def downgrade_to_prospect(self, request, queryset):
+        for seeker in queryset:
+            seeker.delete(keep_parents=True)
+        self.message_user(request, f'{len(queryset)} seeker(s) downgraded to Prospects.')
+    downgrade_to_prospect.short_description = 'Downgrade to Prospect'
+
+    actions = ['downgrade_to_prospect']
+
 
 class HumanAdmin(HumanAdminMixin, admin.ModelAdmin):
     inlines = [HumanNoteAdmin, HumanCalendarSubscriptionAdmin]
