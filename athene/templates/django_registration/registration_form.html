@@ -1,0 +1,14 @@
+{% extends "athene/base.html" %}
+{% load bootstrap4 %}
+{% block title %}Register for the Seeker Portal{% endblock %}
+{% block content %}
+<h1>Register for the Seeker Portal</h1>
+<form action="." method="post">
+<div>
+    <table class="table">
+    {% bootstrap_form form %}
+    </table>
+    <p><input class="btn btn-primary" type="submit" name="Register"></p>
+</div>
+</form>
+{% endblock %}

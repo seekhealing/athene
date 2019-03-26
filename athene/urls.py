@@ -15,7 +15,9 @@ Including another URLconf
 """
 from django.conf import settings
 from django.contrib import admin
+from django.contrib.auth.forms import AuthenticationForm
 from django.http import HttpResponse, HttpResponseRedirect
+from django.views.generic import TemplateView
 from django.urls import path, re_path, include
 
 robots_txt = HttpResponse('User-agent: *\nDisallow: /',
@@ -26,8 +28,12 @@ index['Cache-Control'] = 'max-age=1209600'
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    re_path('^robots.txt$', lambda r: robots_txt),
-    path("", lambda r: index)
+    re_path(r'^robots.txt$', lambda r: robots_txt),
+    re_path(r'^accounts/', include('django_registration.backends.activation.urls')),
+    re_path(r'^accounts/', include('django.contrib.auth.urls')),
+    path("", include('social_django.urls', namespace='social')),
+    path("", TemplateView.as_view(template_name='athene/login.html',
+                                  extra_context={'form': AuthenticationForm()}))
 ]
 
 if settings.DEBUG:

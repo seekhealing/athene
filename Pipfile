@@ -11,7 +11,6 @@ django-debug-toolbar = "*"
 
 [packages]
 django = "*"
-psycopg2 = "*"
 whitenoise = "*"
 django-localflavor = "*"
 django-phonenumber-field = "*"
@@ -28,6 +27,12 @@ django-ckeditor = "*"
 googlemaps = "*"
 mailchimp3 = "*"
 sentry-sdk = "*"
+django-formtools = "*"
+social-auth-app-django = "*"
+django-bootstrap4 = "*"
+psycopg2-binary = "*"
+django-registration = "*"
+django-anymail = "*"
 
 [requires]
 python_version = "3.7"

@@ -1,0 +1,10 @@
+{% extends "athene/base.html" %}
+{% block title %}Activation failed{% endblock %}
+{% block content %}
+<h1>Account activation failed!</h1>
+<p>There was a problem activating your account.</p>
+<p>Please email <a href="mailto:joshua@seekhealing.org">joshua@seekhealing.org</a> and include the following:</p>
+<pre>
+{{ activation_error|pprint }}
+</pre>
+{% endblock %}

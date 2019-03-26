@@ -42,6 +42,9 @@ INSTALLED_APPS = [
     'ckeditor',
     'seekers',
     'events',
+    'social_django',
+    'bootstrap4',
+    'django_registration',
 ]
 if DEBUG:
     INSTALLED_APPS.append('debug_toolbar')
@@ -65,7 +68,7 @@ ROOT_URLCONF = 'athene.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'athene', 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -73,6 +76,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'social_django.context_processors.backends',
+                'social_django.context_processors.login_redirect',
             ],
         },
     },
@@ -164,6 +169,9 @@ PHONENUMBER_DEFAULT_REGION = 'US'
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'athene', 'static'),
+]
 
 INTERNAL_IPS = ['127.0.0.1']
 
@@ -202,3 +210,36 @@ if 'SENTRY_DSN' in os.environ:
 SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
 SESSION_COOKIE_HTTPONLY = True
 
+SOCIAL_AUTH_POSTGRES_JSONFIELD = True
+AUTHENTICATION_BACKENDS = [
+    'social_core.backends.facebook.FacebookOAuth2',
+    'django.contrib.auth.backends.ModelBackend',
+]
+SOCIAL_AUTH_FACEBOOK_KEY = os.environ.get('FACEBOOK_APP_ID')
+SOCIAL_AUTH_FACEBOOK_SECRET = os.environ.get('FACEBOOK_APP_SECRET')
+SOCIAL_AUTH_FACEBOOK_SCOPE = ['email', 'user_birthday']
+SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
+    'locale': 'en_US',
+    'fields': 'id, first_name, last_name, email, address, birthday'
+}
+
+from bootstrap4 import bootstrap
+BOOTSTRAP4 = bootstrap.BOOTSTRAP4_DEFAULTS.copy()
+BOOTSTRAP4.update(
+    dict(
+        include_jquery=True
+    )
+)
+
+REGISTRATION_SALT = '4X01Iih3'
+
+if DEBUG:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+else:
+    EMAIL_BACKEND = "anymail.backends.sendgrid.EmailBackend"
+    SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY')
+EMAIL_USE_LOCALTIME = True
+DEFAULT_FROM_EMAIL = 'joshua@seekhealing.org'
+SERVER_EMAIL = 'joshua@seekhealing.org'
+ADMINS = [('jag', 'joshua@seekhealing.org'),]
+MANAGERS = ADMINS

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+{% load static bootstrap4 %}
+{% if 'use_i18n'|bootstrap_setting %}
+    {% load i18n %}
+    {% get_current_language as LANGUAGE_CODE %}
+{% endif %}
+<html lang="{{ LANGUAGE_CODE|default:'en_us' }}">
+
+<head>
+
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    {% bootstrap_css %}
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
+
+    {% if 'javascript_in_head'|bootstrap_setting %}
+        {% if 'include_jquery'|bootstrap_setting %}
+            <!-- jQuery JavaScript if it is in head -->
+	    {% bootstrap_jquery jquery='include_jquery'|bootstrap_setting %}
+        {% endif %}
+        <!-- Bootstrap JavaScript if it is in head -->
+        {% bootstrap_javascript %}
+    {% endif %}
+
+    {% block extra_head %}{% endblock %}
+    <title>SeekHealing Seeker Portal - {% block title %}{% endblock %}</title>
+</head>
+
+<body class="{% block bodyclass %}{% endblock %}">
+
+{% block navbar %}
+<nav class="navbar navbar-expand-md navbar-light fixed-top bg-light">
+    <a class="navbar-brand" href="/">
+        <img src="{% static "athene/img/seekhealing.svg" %}" width="160" height="40">
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarCollapse">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item active">
+                <a class="nav-link" href="/">Home</a>
+            </li>
+        </ul>
+    </div>
+</nav>
+{% endblock %}
+{% block content_wrapper %}
+<div class="container my-5 mx-md-3 pt-5">
+
+{% block content %}{% endblock %}
+
+</div>
+{% endblock %}
+{% if not 'javascript_in_head'|bootstrap_setting %}
+    {% if 'include_jquery'|bootstrap_setting %}
+        <!-- jQuery JavaScript if it is in body -->
+	{% bootstrap_jquery jquery='include_jquery'|bootstrap_setting %}
+    {% endif %}
+    <!-- Bootstrap JavaScript if it is in body -->
+    {% bootstrap_javascript %}
+{% endif %}
+{% block extra_script %}{% endblock %}
+</body>
+
+</html>

@@ -1,0 +1,10 @@
+A request was received from https://seekers.seekhealing.org/ to register
+an account using this email address. Please click on the below link to
+activate your new account:
+
+https://seekers.seekhealing.org{% url "django_registration_activate" activation_key %}
+
+If you did not make this request, you may safely disregard it.
+
+Kindly,
+The SeekHealing Team
