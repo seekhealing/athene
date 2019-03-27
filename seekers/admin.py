@@ -199,6 +199,24 @@ class IsActiveFilter(admin.SimpleListFilter):
         else:
             return queryset        
 
+class IsConnectionAgentFilter(admin.SimpleListFilter):
+    title = 'Connection agent'
+    parameter_name = 'is_active'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('1', 'Yes'),
+            ('0', 'No')
+        )
+    
+    def queryset(self, request, queryset):
+        if self.value() == 'true':
+            return queryset.exclude(connection_agent_organization='')
+        elif self.value() == 'false':
+            return queryset.filter(connection_agent_organization='')
+        else:
+            return queryset        
+
 class SeekerAdmin(HumanAdminMixin, admin.ModelAdmin):
     inlines = [HumanNoteAdmin, SeekerMilestoneAdmin, 
                HumanCalendarSubscriptionAdmin,]
@@ -216,7 +234,8 @@ class SeekerAdmin(HumanAdminMixin, admin.ModelAdmin):
                        'facebook_alias'), 'contact_preference')
         }),
         ('Service Opportunities', {
-            'fields': (('ride_share', 'space_holder', 'activity_buddy', 'outreach'),),
+            'fields': (('ride_share', 'space_holder', 'activity_buddy', 'outreach'),
+                       'connection_agent_organization'),
         }),
         ('Important dates', {
             'fields': (('birthdate', 'sober_anniversary'),),
@@ -237,9 +256,10 @@ class SeekerAdmin(HumanAdminMixin, admin.ModelAdmin):
     readonly_fields = ['show_id', 'seeker_pairs', 'listener_trained', 
                        'extra_care', 'extra_care_graduate', 
                        'created', 'updated']
-    list_display = ['first_names', 'last_names', 'email', 'phone_number', 'listener_trained', 'extra_care', 'extra_care_graduate', 'is_active']
+    list_display = ['first_names', 'last_names', 'email', 'phone_number', 'listener_trained', 'extra_care', 
+                    'extra_care_graduate', 'is_active', 'is_connection_agent']
     list_display_links = ['first_names', 'last_names']
-    list_filter = ['listener_trained', 'extra_care', 'extra_care_graduate', IsActiveFilter,
+    list_filter = ['listener_trained', 'extra_care', 'extra_care_graduate', IsActiveFilter, IsConnectionAgentFilter,
                    'ride_share', 'space_holder', 'activity_buddy', 'outreach']
     search_fields = ['last_names', 'first_names', 'email', 'phone_number']
 

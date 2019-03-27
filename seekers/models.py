@@ -74,7 +74,7 @@ class Human(models.Model):
 
     class Meta:
         verbose_name = 'Prospect'
-        ordering = ['last_names', 'first_names']
+        ordering = ['first_names', 'last_names']
         index_together = [('last_names', 'first_names')]
 
 TRANSPORTATION_CHOICES = [
@@ -94,6 +94,7 @@ class Seeker(Human):
     def is_active(self):
         return self.inactive_date is None
     is_active.boolean = True
+    is_active.short_description = 'Active'
     
     seeker_pairings = models.ManyToManyField('self', through='SeekerPairing',
                                              symmetrical=False)
@@ -109,6 +110,12 @@ class Seeker(Human):
     space_holder = models.BooleanField(default=False)
     activity_buddy = models.BooleanField(default=False)
     outreach = models.BooleanField(default=False)
+    connection_agent_organization = models.CharField(max_length=120, blank=True)
+
+    def is_connection_agent(self):
+        return bool(self.connection_agent_organization)
+    is_connection_agent.boolean = True
+    is_connection_agent.short_description = 'Connection agent'
 
     transportation = models.IntegerField(choices=TRANSPORTATION_CHOICES,
                                          blank=True, null=True)
@@ -218,7 +225,7 @@ class HumanNote(models.Model):
     
 class SeekerBenefitType(models.Model):
     name = models.CharField(max_length=120)
-    default_cost = models.DecimalField(decimal_places=2, max_digits=5, blank=True, default=decimal.Decimal("0"))
+    default_cost = models.DecimalField(decimal_places=2, max_digits=5, blank=True)
 
     def __str__(self):
         return self.name
