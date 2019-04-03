@@ -96,6 +96,7 @@ class HumanAdminMixin(object):
  
     def save_formset(self, request, form, formset, change):
         instances = formset.save(commit=False)
+        formset.save_existing_objects()
 
         for instance in instances:
             if isinstance(instance, models.HumanNote):
