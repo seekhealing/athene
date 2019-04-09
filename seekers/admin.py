@@ -99,8 +99,8 @@ class HumanAdminMixin(object):
         formset.save_existing_objects()
 
         for instance in instances:
-            if isinstance(instance, models.HumanNote):
-                if not instance.id:
+            if not instance.id:
+                if isinstance(instance, models.HumanNote):
                     instance.added_by = request.user
             instance.save()
 

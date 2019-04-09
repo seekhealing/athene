@@ -5,3 +5,4 @@ events/token.pickle
 staticfiles/
 .env
 local/
+vendor/
