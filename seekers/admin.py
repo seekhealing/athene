@@ -193,9 +193,9 @@ class IsActiveFilter(admin.SimpleListFilter):
         )
     
     def queryset(self, request, queryset):
-        if self.value() == 'true':
+        if self.value() == '1':
             return queryset.filter(inactive_date__isnull=True)
-        elif self.value() == 'false':
+        elif self.value() == '0':
             return queryset.filter(inactive_date__isnull=False)
         else:
             return queryset        
@@ -211,9 +211,9 @@ class IsConnectionAgentFilter(admin.SimpleListFilter):
         )
     
     def queryset(self, request, queryset):
-        if self.value() == 'true':
+        if self.value() == '1':
             return queryset.exclude(connection_agent_organization='')
-        elif self.value() == 'false':
+        elif self.value() == '0':
             return queryset.filter(connection_agent_organization='')
         else:
             return queryset        
