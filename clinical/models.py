@@ -53,14 +53,32 @@ CONNECTION_CAPACITY_CHOICES = [
          "capable of creating new authentic connections with strangers.")
 ]
 
+LIFE_CONFIDENCE_CHOICES = [
+    (1, 'Not at all'),
+    (2, 'Doubtful'),
+    (3, '50/50'),
+    (4, 'Hopeful'),
+    (5, 'Confident')
+]
+
+THRIVING_CONFIDENCE_CHOICES = [
+    (1, 'Completely powerless'),
+    (2, 'Fighting an uphill battle'),
+    (3, 'At a tipping point'),
+    (4, 'Able to roll with it'),
+    (5, 'Stable and steady')
+]
+
 class SeekerIntakeData(models.Model):
     seeker = models.OneToOneField('seekers.Seeker', unique=True, on_delete=models.CASCADE)
+
     why_are_you_here = RichTextField(
         blank=True,
         verbose_name='What attracts you to SeekHealing?',
-        help_text=('Why are you here, and what do you want to get 
-                   'out of being involved in this program & community?')
+        help_text=('Why are you here, and what do you want to get '
+                   'out of being involved in this program and community?')
     )
+
     are_you_a_seeker = RichTextField(
         blank=True,
         verbose_name='Do you consider yourself a seeker?',
@@ -69,6 +87,7 @@ class SeekerIntakeData(models.Model):
                    "with behavior(s) that don't serve you. That may involve "
                    "overcoming a chemical addiction, or it may not.")
     )
+
     substance_use_history = models.TypedChoiceField(
         coerce=lambda x: x =='True', 
         choices=((False, 'No'), (True, 'Yes')), 
@@ -92,7 +111,7 @@ class SeekerIntakeData(models.Model):
     )
 
     current_intentions = ArrayField(
-        models=IntegerField,
+        models=models.IntegerField,
         blank=True
     )
 
@@ -112,4 +131,26 @@ class SeekerIntakeData(models.Model):
         verbose_name="How many people in your life do you trust enough to "
                      "share absolutely anything with?",
         null=True, blank=True
+    )
+
+    life_confidence = models.PositiveIntegerField(
+        verbose_name="How confident are you that you will be alive one year "
+                     "from now?",
+        help_text="Improbably twists of fate aside.",
+        default=3
+    )
+
+    thriving_confidence = models.PositiveIntegerField(
+        verbose_name="How empowered do you feel to make changes and confront "
+                     "challenges in your life?",
+        default=3
+    )
+
+    connection_booster = RichTextField(
+        verbose_name='What kinds of things help you feel more connected?',
+        help_text="Talking to your best friend, yoga, running, twerking, "
+                  "meditating, listening to music, petting cute animals, "
+                  "climbing mountains, ceremonial medicine work, doing "
+                  "backflips... What's your connection booster of choice?",
+        blank=True
     )

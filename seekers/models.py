@@ -37,10 +37,18 @@ CONTACT_PREFERENCES = [
     (3, 'Facebook')
 ]
 
+PRONOUNS_PREFERENCES = [
+    ('male', 'Male (he/him/his)'),
+    ('female', 'Female (she/her/hers)'),
+    ('neutral', 'Neutral (they/them/theirs)'),
+    ('other', 'Other pronouns')
+]
+
 class Human(models.Model):
     id = models.CharField(max_length=4, primary_key=True, default=id_gen, editable=False)
     first_names = models.CharField(max_length=120)
     last_names = models.CharField(max_length=120)
+    pronouns = models.CharField(max_length=8, blank=True, default='', choices=PRONOUNS_PREFERENCES)
     email = models.EmailField(blank=True)
     phone_number = PhoneNumberField(blank=True)
     city = models.CharField(max_length=30, blank=True)
