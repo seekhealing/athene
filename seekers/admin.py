@@ -76,7 +76,7 @@ class HumanAdminMixin(object):
         initial_tags = []
         if object_id:
             obj = self.get_object(request, object_id)
-            if obj.email:
+            if obj and obj.email:
                 status = mailchimp.client.subscription_status(obj.email)
                 logger.debug(f'Current subscription status: {status}')
                 initial_tags = [tag['name'] for tag in status.get('tags', [])]
