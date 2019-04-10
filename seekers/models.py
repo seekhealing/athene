@@ -41,8 +41,10 @@ class Human(models.Model):
     id = models.CharField(max_length=4, primary_key=True, default=id_gen, editable=False)
     first_names = models.CharField(max_length=120)
     last_names = models.CharField(max_length=120)
-    email = models.EmailField(blank=True)
-    phone_number = PhoneNumberField(blank=True)
+    email = models.EmailField(
+        blank=True, error_messages=dict(unique='A person with this email is already in the system.'))
+    phone_number = PhoneNumberField(
+        blank=True, error_messages=dict(unique='A person with this phone number is already in the system.'))
     city = models.CharField(max_length=30, blank=True)
     state = USStateField(default='NC')
     created = models.DateTimeField(auto_now_add=True)
@@ -71,6 +73,16 @@ class Human(models.Model):
             **{field.name: getattr(self, field.name) for field in type(self)._meta.fields})
         community_partner.save()
         return community_partner
+    
+    def _get_unique_checks(self, exclude=None):
+        # We want email and phone_number to be unique but we don't want to do so at the DB level because
+        # we still need blank values
+        unique_checks, date_checks = super()._get_unique_checks(exclude=exclude)
+        if self.email:
+            unique_checks.append((self.__class__, ('email',)))
+        if self.phone_number:
+            unique_checks.append((self.__class__, ('phone_number',)))
+        return unique_checks, date_checks
 
     class Meta:
         verbose_name = 'Prospect'
