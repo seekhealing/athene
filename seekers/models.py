@@ -122,6 +122,7 @@ class Seeker(Human):
     space_holder = models.BooleanField(default=False)
     activity_buddy = models.BooleanField(default=False)
     outreach = models.BooleanField(default=False)
+    ready_to_pair = models.BooleanField(default=False)
     connection_agent_organization = models.CharField(max_length=120, blank=True)
 
     def is_connection_agent(self):
@@ -162,7 +163,7 @@ class Seeker(Human):
             result = client.distance_matrix(
                 origins=f'{self.street_address}, {self.zip_code}',
                 destinations=[f'{obj.street_address}, {obj.zip_code}'
-                            for obj in ride_volunteers],
+                              for obj in ride_volunteers],
                 mode='driving', units='imperial'
             )
             result_rows += result['rows'][0]['elements']
@@ -171,11 +172,15 @@ class Seeker(Human):
         result_map.sort(key=lambda result: result[1]['duration']['value'])
         return [(result[0], result[1]) for result in result_map]
 
+def today():
+    return timezone.now().date()
+
 class SeekerPairing(models.Model):
     left = models.ForeignKey(Seeker, on_delete=models.CASCADE, related_name='left_pair')
     right = models.ForeignKey(Seeker, on_delete=models.CASCADE, related_name='right_pair')
-    pair_date = models.DateField(auto_now=True)
+    pair_date = models.DateField(default=today)
     unpair_date = models.DateField(blank=True, null=True)
+    notes = models.TextField(blank=True)
 
     def clean(self):
         if self.left_id == self.right_id:
@@ -186,6 +191,7 @@ class SeekerPairing(models.Model):
 
     class Meta:
         ordering = ['pair_date']
+
 
 SEEKER_MILESTONES = [
     (1, 'Listening trained'),

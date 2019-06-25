@@ -227,9 +227,33 @@ class IsConnectionAgentFilter(admin.SimpleListFilter):
             return queryset        
 
 
+class PairingStatusFilter(admin.SimpleListFilter):
+    title = 'Pairing status'
+    parameter_name = 'pairing_status'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('p', 'Paired'),
+            ('u_r', 'Unpaired and ready'),
+            ('u_u', 'Unpaired but unready')
+        )
+    
+    def queryset(self, request, queryset):
+        paired_filter = Q(left_pair__unpair_date__isnull=True, left_pair__id__isnull=False) | \
+                        Q(right_pair__unpair_date__isnull=True, right_pair__id__isnull=False)
+        if self.value() == 'p':
+            return queryset.filter(paired_filter).distinct()
+        paired_seekers = models.Seeker.objects.filter(paired_filter).values_list('id', flat=True)
+        if self.value() == 'u_r':
+            return queryset.filter(ready_to_pair=True).exclude(id__in=paired_seekers).distinct()
+        if self.value() == 'u_u':
+            return queryset.filter(ready_to_pair=False).exclude(id__in=paired_seekers).distinct()
+        return queryset
+            
+
 class SeekerAdmin(HumanAdminMixin, admin.ModelAdmin):
     inlines = [HumanNoteAdmin, SeekerMilestoneAdmin,
-               HumanCalendarSubscriptionAdmin,]
+               HumanCalendarSubscriptionAdmin]
 
     model = models.Seeker
     fieldsets = (
@@ -270,7 +294,7 @@ class SeekerAdmin(HumanAdminMixin, admin.ModelAdmin):
                     'extra_care_graduate', 'is_active', 'is_connection_agent']
     list_display_links = ['first_names', 'last_names']
     list_filter = ['listener_trained', 'extra_care', 'extra_care_graduate', IsActiveFilter, IsConnectionAgentFilter,
-                   'ride_share', 'space_holder', 'activity_buddy', 'outreach']
+                   PairingStatusFilter, 'ride_share', 'space_holder', 'activity_buddy', 'outreach']
     search_fields = ['last_names', 'first_names', 'email', 'phone_number']
 
     def seeker_pairs(self, instance):
@@ -305,9 +329,29 @@ class SeekerAdmin(HumanAdminMixin, admin.ModelAdmin):
     actions = ['downgrade_to_prospect']
 
 
+class IsActivePairingFilter(admin.SimpleListFilter):
+    title = 'Active/Inactive Pairs'
+    parameter_name = 'is_active'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('1', 'Active'),
+            ('0', 'Inactive')
+        )
+    
+    def queryset(self, request, queryset):
+        if self.value() == '1':
+            return queryset.filter(unpair_date__isnull=True)
+        elif self.value() == '0':
+            return queryset.filter(unpair_date__isnull=False)
+        else:
+            return queryset        
+
+
 class SeekerPairingAdmin(admin.ModelAdmin):
     model = models.SeekerPairing
     list_display = ('left', 'right', 'pair_date', 'unpair_date')
+    list_filter = [IsActivePairingFilter]
 
 
 class SeekerBenefitAdmin(admin.TabularInline):
