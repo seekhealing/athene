@@ -6,3 +6,4 @@ staticfiles/
 .env
 local/
 vendor/
+*.dump
