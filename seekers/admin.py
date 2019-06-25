@@ -2,11 +2,8 @@ import copy
 from decimal import Decimal
 import logging
 
-logger = logging.getLogger(__name__)
-
 from django.contrib import admin
 from django.conf import settings
-from django.apps import apps
 from django.db.models import Count, Sum, Avg, Q
 from django import forms
 from django.http import HttpResponseRedirect
@@ -17,15 +14,19 @@ from django.utils.decorators import method_decorator
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_protect
 
-csrf_protect_m = method_decorator(csrf_protect)
-
 from . import models, mailchimp
 from events.admin import HumanCalendarSubscriptionAdmin
+
+
+logger = logging.getLogger(__name__)
+csrf_protect_m = method_decorator(csrf_protect)
+
 
 class SeekerMilestoneAdmin(admin.TabularInline):
     model = models.SeekerMilestone
     extra = 1
     classes = ["collapse"]
+
 
 class HumanNoteAdmin(admin.StackedInline):
     model = models.HumanNote
@@ -34,18 +35,19 @@ class HumanNoteAdmin(admin.StackedInline):
     fieldsets = (
         (None, {
             'fields': ('note',)
-    }),)
+        }),)
 
     def has_change_permission(self, request, obj=None):
         return False
+
 
 class MailchimpForm(forms.Form):
     tags = forms.MultipleChoiceField(choices=[(t,t) for t in settings.MAILCHIMP_TAGS],
                                      widget=forms.widgets.CheckboxSelectMultiple,
                                      required=False)
 
-class HumanAdminMixin(object):
 
+class HumanAdminMixin(object):
     def save_model(self, request, obj, form, change):
         to_return = super().save_model(request, obj, form, change)
         if not change and obj.email:
@@ -104,6 +106,7 @@ class HumanAdminMixin(object):
                     instance.added_by = request.user
             instance.save()
 
+
 class HumanAdmin(HumanAdminMixin, admin.ModelAdmin):
     inlines = [HumanNoteAdmin, HumanCalendarSubscriptionAdmin]
     model = models.Human
@@ -120,7 +123,7 @@ class HumanAdmin(HumanAdminMixin, admin.ModelAdmin):
 
     def enroll_seeker(self, request, object_id):
         human = self.get_object(request, object_id)
-        seeker = human.upgrade_to_seeker()
+        _ = human.upgrade_to_seeker()
         self.message_user(request, f'{human} has been enrolled as a Seeker.')
         return HttpResponseRedirect(reverse('admin:seekers_seeker_change', args=(object_id,)))
 
@@ -131,23 +134,26 @@ class HumanAdmin(HumanAdminMixin, admin.ModelAdmin):
         else:
             return qs.filter(seeker__isnull=True, communitypartner__isnull=True)
 
-    fieldsets = (
+    fieldsets = [
         (None, {
             'fields': ['show_id', ('first_names', 'last_names'), 
-                       ('city', 'state')],
+                       'street_address', ('city', 'state', 'zip_code')],
         }),
         ('Contact information', {
             'fields': (('email', 'phone_number'), 'contact_preference')
-        }), 
+        }),
+        ('Important dates', {
+            'fields': (('birthdate', 'sober_anniversary'),),
+        }),
         ('Record history', {
             'fields': (('created', 'updated'),),
         }),
-    )
+    ]
 
     def _get_obj_does_not_exist_redirect(self, request, opts, object_id):
         try:
-            seeker_obj = models.Seeker.objects.get(pk=object_id)
-        except models.Seeker.DoesNotExist as e:
+            _ = models.Seeker.objects.get(pk=object_id)
+        except models.Seeker.DoesNotExist:
             return HttpResponseRedirect(
                 reverse('admin:seekers_seeker_change', args=(object_id,))
             )
@@ -157,11 +163,12 @@ class HumanAdmin(HumanAdminMixin, admin.ModelAdmin):
     def get_fieldsets(self, request, obj=None):
         if obj is None and '_popup' in request.GET:
             shortened_fieldsets = copy.deepcopy(self.fieldsets[0:2])
-            shortened_fieldsets[0][1]['fields'].remove('show_id')
+            shortened_fieldsets[0][1]['fields'] = [('first_names', 'last_names'), 
+                                                   ('city', 'state')]
             return shortened_fieldsets
         return super().get_fieldsets(request, obj)
     
-    readonly_fields = ['show_id', 'created','updated']
+    readonly_fields = ['show_id', 'created', 'updated']
     list_display = ['__str__', 'email', 'phone_number']
     search_fields = ['last_names', 'first_names', 'email', 'phone_number']
 
@@ -179,8 +186,8 @@ class HumanAdmin(HumanAdminMixin, admin.ModelAdmin):
         self.message_user(request, f'{len(queryset)} prospect(s) marked as Community Partners.')
     mark_as_community_partner.short_description = 'Mark as Community Partner'
 
-
     actions = ['enroll_as_seeker', 'mark_as_community_partner']
+
 
 class IsActiveFilter(admin.SimpleListFilter):
     title = 'Active'
@@ -200,6 +207,7 @@ class IsActiveFilter(admin.SimpleListFilter):
         else:
             return queryset        
 
+
 class IsConnectionAgentFilter(admin.SimpleListFilter):
     title = 'Connection agent'
     parameter_name = 'is_active'
@@ -218,8 +226,9 @@ class IsConnectionAgentFilter(admin.SimpleListFilter):
         else:
             return queryset        
 
+
 class SeekerAdmin(HumanAdminMixin, admin.ModelAdmin):
-    inlines = [HumanNoteAdmin, SeekerMilestoneAdmin, 
+    inlines = [HumanNoteAdmin, SeekerMilestoneAdmin,
                HumanCalendarSubscriptionAdmin,]
 
     model = models.Seeker
@@ -296,15 +305,16 @@ class SeekerAdmin(HumanAdminMixin, admin.ModelAdmin):
     actions = ['downgrade_to_prospect']
 
 
-
 class SeekerPairingAdmin(admin.ModelAdmin):
     model = models.SeekerPairing
     list_display = ('left', 'right', 'pair_date', 'unpair_date')
+
 
 class SeekerBenefitAdmin(admin.TabularInline):
     model = models.SeekerBenefit
     extra = 1
     autocomplete_fields = ['benefit_type']
+
 
 class SeekerBenefitProxyAdmin(admin.ModelAdmin):
     model = models.SeekerBenefitProxy
@@ -363,8 +373,10 @@ class SeekerBenefitProxyAdmin(admin.ModelAdmin):
             )
         )
 
+
 class SeekerBenefitTypeAdmin(admin.ModelAdmin):
     search_fields = ['name']
+
 
 class CommunityPartnerAdmin(HumanAdminMixin, admin.ModelAdmin):
     model = models.CommunityPartner

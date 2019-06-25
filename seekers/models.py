@@ -45,8 +45,12 @@ class Human(models.Model):
         blank=True, error_messages=dict(unique='A person with this email is already in the system.'))
     phone_number = PhoneNumberField(
         blank=True, error_messages=dict(unique='A person with this phone number is already in the system.'))
+    birthdate = models.DateField(blank=True, null=True)
+    sober_anniversary = models.DateField(blank=True, null=True)
+    street_address = models.CharField(max_length=120, blank=True)
     city = models.CharField(max_length=30, blank=True)
     state = USStateField(default='NC')
+    zip_code = USZipCodeField(blank=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     contact_preference = models.IntegerField(choices=CONTACT_PREFERENCES, blank=True, null=True)
@@ -96,10 +100,6 @@ TRANSPORTATION_CHOICES = [
 ]
 
 class Seeker(Human):
-    street_address = models.CharField(max_length=120, blank=True)
-    zip_code = USZipCodeField(blank=True)
-    birthdate = models.DateField(blank=True, null=True)
-    sober_anniversary = models.DateField(blank=True, null=True)
 
     inactive_date = models.DateField(blank=True, null=True)
 
