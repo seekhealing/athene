@@ -11,6 +11,7 @@ from django.shortcuts import render
 from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.utils.decorators import method_decorator
+from django.utils.safestring import mark_safe
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_protect
 
@@ -298,8 +299,10 @@ class SeekerAdmin(HumanAdminMixin, admin.ModelAdmin):
     search_fields = ['last_names', 'first_names', 'email', 'phone_number']
 
     def seeker_pairs(self, instance):
-        return ', '.join(map(str, instance.seeker_pairs))
-    
+        return mark_safe(
+            ', '.join(map(lambda sp: f'<a href="../../../seekerpairing/{sp[0]}/">{sp[1]}</a>', instance.seeker_pairs))
+        )
+        
     def get_urls(self):
         from django.urls import path
         urlpatterns = super().get_urls()
@@ -348,10 +351,16 @@ class IsActivePairingFilter(admin.SimpleListFilter):
             return queryset        
 
 
+class SeekerPairingMeetingAdmin(admin.TabularInline):
+    model = models.SeekerPairingMeeting
+    extra = 1
+
+
 class SeekerPairingAdmin(admin.ModelAdmin):
     model = models.SeekerPairing
     list_display = ('left', 'right', 'pair_date', 'unpair_date')
     list_filter = [IsActivePairingFilter]
+    inlines = [SeekerPairingMeetingAdmin]
 
 
 class SeekerBenefitAdmin(admin.TabularInline):

@@ -146,9 +146,9 @@ class Seeker(Human):
         pairs = []
         for pairing in pairings:
             if pairing.left_id == self.id:
-                pairs.append(pairing.right)
+                pairs.append((pairing.id, pairing.right))
             else:
-                pairs.append(pairing.left)
+                pairs.append((pairing.id, pairing.left))
         return pairs
     
     def find_ride(self):
@@ -172,8 +172,10 @@ class Seeker(Human):
         result_map.sort(key=lambda result: result[1]['duration']['value'])
         return [(result[0], result[1]) for result in result_map]
 
+
 def today():
     return timezone.now().date()
+
 
 class SeekerPairing(models.Model):
     left = models.ForeignKey(Seeker, on_delete=models.CASCADE, related_name='left_pair')
@@ -193,11 +195,24 @@ class SeekerPairing(models.Model):
         ordering = ['pair_date']
 
 
+class SeekerPairingMeeting(models.Model):
+    seeker_pairing = models.ForeignKey(SeekerPairing, on_delete=models.CASCADE)
+    meeting_date = models.DateField(default=today)
+    comment = models.CharField(max_length=200)
+
+    def __str__(self):
+        return f'Meeting for {self.seeker_pairing} on {self.meeting_date}'
+    
+    class Meta:
+        ordering = ['-meeting_date']
+
+
 SEEKER_MILESTONES = [
     (1, 'Listening trained'),
     (2, 'Extra-care enrolled'),
     (3, 'Extra-care graduated')
 ]
+
 
 class SeekerMilestone(models.Model):
     seeker = models.ForeignKey(Seeker, on_delete=models.CASCADE)
