@@ -269,7 +269,7 @@ class SeekerAdmin(HumanAdminMixin, admin.ModelAdmin):
                        'facebook_alias'), 'contact_preference')
         }),
         ('Service Opportunities', {
-            'fields': (('ride_share', 'space_holder', 'activity_buddy', 'outreach'),
+            'fields': (('ready_to_pair', 'ride_share', 'space_holder', 'activity_buddy', 'outreach'),
                        'connection_agent_organization'),
         }),
         ('Important dates', {
