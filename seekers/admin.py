@@ -108,9 +108,33 @@ class HumanAdminMixin(object):
             instance.save()
 
 
+class FirstConversationFilter(admin.SimpleListFilter):
+    title = 'First conversation scheduled'
+    parameter_name = 'first_conv'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('future', 'Scheduled'),
+            ('past', 'Already occurred'),
+            ('null', 'Needs scheduling')
+        )
+    
+    def queryset(self, request, queryset):
+        if self.value() == 'future':
+            return queryset.filter(first_conversation__isnull=False,
+                                   first_conversation__gte=timezone.now().date())
+        if self.value() == 'past':
+            return queryset.filter(first_conversation__isnull=False,
+                                   first_conversation__lte=timezone.now().date())
+        if self.value() == 'null':
+            return queryset.filter(first_conversation__isnull=True)
+        return queryset
+
+
 class HumanAdmin(HumanAdminMixin, admin.ModelAdmin):
     inlines = [HumanNoteAdmin, HumanCalendarSubscriptionAdmin]
     model = models.Human
+    list_filter = [FirstConversationFilter]
 
     def get_urls(self):
         from django.urls import path
@@ -144,7 +168,7 @@ class HumanAdmin(HumanAdminMixin, admin.ModelAdmin):
             'fields': (('email', 'phone_number'), 'contact_preference')
         }),
         ('Important dates', {
-            'fields': (('birthdate', 'sober_anniversary'),),
+            'fields': (('birthdate', 'sober_anniversary'), 'first_conversation'),
         }),
         ('Record history', {
             'fields': (('created', 'updated'),),
@@ -170,7 +194,7 @@ class HumanAdmin(HumanAdminMixin, admin.ModelAdmin):
         return super().get_fieldsets(request, obj)
     
     readonly_fields = ['show_id', 'created', 'updated']
-    list_display = ['__str__', 'email', 'phone_number']
+    list_display = ['first_names', 'last_names', 'email', 'phone_number', 'first_conversation']
     search_fields = ['last_names', 'first_names', 'email', 'phone_number']
 
     def enroll_as_seeker(self, request, queryset):
@@ -273,7 +297,7 @@ class SeekerAdmin(HumanAdminMixin, admin.ModelAdmin):
                        'connection_agent_organization'),
         }),
         ('Important dates', {
-            'fields': (('birthdate', 'sober_anniversary'),),
+            'fields': (('birthdate', 'sober_anniversary'), 'first_conversation'),
         }),
         ('Record history', {
             'fields': (('created', 'updated'), 'inactive_date'),
@@ -448,6 +472,7 @@ class CommunityPartnerAdmin(HumanAdminMixin, admin.ModelAdmin):
         }),
     )
     readonly_fields = ['show_id', 'created', 'updated']
+    list_display = ['first_names', 'last_names', 'email', 'phone_number']
 
 admin.site.register(models.Human, HumanAdmin)
 admin.site.register(models.Seeker, SeekerAdmin)

@@ -37,6 +37,7 @@ CONTACT_PREFERENCES = [
     (3, 'Facebook')
 ]
 
+
 class Human(models.Model):
     id = models.CharField(max_length=4, primary_key=True, default=id_gen, editable=False)
     first_names = models.CharField(max_length=120)
@@ -54,6 +55,7 @@ class Human(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     contact_preference = models.IntegerField(choices=CONTACT_PREFERENCES, blank=True, null=True)
+    first_conversation = models.DateField(blank=True, null=True)
  
     def __str__(self):
         return f'{self.first_names} {self.last_names}'
