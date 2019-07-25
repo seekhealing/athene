@@ -101,6 +101,7 @@ TRANSPORTATION_CHOICES = [
     (3, 'Homebound'),
 ]
 
+
 class Seeker(Human):
 
     inactive_date = models.DateField(blank=True, null=True)
@@ -122,6 +123,7 @@ class Seeker(Human):
 
     ride_share = models.BooleanField(default=False)
     space_holder = models.BooleanField(default=False)
+    facilitator = models.BooleanField(default=False)
     activity_buddy = models.BooleanField(default=False)
     outreach = models.BooleanField(default=False)
     ready_to_pair = models.BooleanField(default=False)

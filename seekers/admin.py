@@ -233,9 +233,26 @@ class IsActiveFilter(admin.SimpleListFilter):
             return queryset        
 
 
+class ServiceFilter(admin.SimpleListFilter):
+    title = 'Service offer'
+    parameter_name = 'service_offer'
+    service_fields = ['ride_share', 'space_holder', 'facilitator',
+                      'activity_buddy', 'outreach']
+
+    def lookups(self, request, model_admin):
+        return [
+            (f, f.replace('_', ' ').capitalize()) for f in self.service_fields
+        ]
+    
+    def queryset(self, request, queryset):
+        if self.value() in self.service_fields:
+            return queryset.filter(**{self.value(): True})
+        return queryset
+
+
 class IsConnectionAgentFilter(admin.SimpleListFilter):
     title = 'Connection agent'
-    parameter_name = 'is_active'
+    parameter_name = 'connection_agent'
 
     def lookups(self, request, model_admin):
         return (
@@ -319,7 +336,7 @@ class SeekerAdmin(HumanAdminMixin, admin.ModelAdmin):
                     'extra_care_graduate', 'is_active', 'is_connection_agent']
     list_display_links = ['first_names', 'last_names']
     list_filter = ['listener_trained', 'extra_care', 'extra_care_graduate', IsActiveFilter, IsConnectionAgentFilter,
-                   PairingStatusFilter, 'ride_share', 'space_holder', 'activity_buddy', 'outreach']
+                   PairingStatusFilter, ServiceFilter]
     search_fields = ['last_names', 'first_names', 'email', 'phone_number']
 
     def seeker_pairs(self, instance):
