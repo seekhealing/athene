@@ -187,8 +187,9 @@ MAILCHIMP_USERNAME = os.environ.get('MAILCHIMP_USERNAME')
 MAILCHIMP_LIST_ID = os.environ.get('MAILCHIMP_LIST_ID')
 import json
 MAILCHIMP_TAGS = json.loads(os.environ.get('MAILCHIMP_TAGS'))
-MAILCHIMP_DEFAULT_HUMAN_TAGS = json.loads(os.environ.get('MAILCHIMP_DEFAULT_HUMAN_TAGS'))
-MAILCHIMP_DEFAULT_SEEKER_TAGS = json.loads(os.environ.get('MAILCHIMP_DEFAULT_SEEKER_TAGS'))
+MAILCHIMP_DEFAULT_HUMAN_TAGS = json.loads(os.environ.get('MAILCHIMP_DEFAULT_HUMAN_TAGS', '[]'))
+MAILCHIMP_DEFAULT_SEEKER_TAGS = json.loads(os.environ.get('MAILCHIMP_DEFAULT_SEEKER_TAGS', '[]'))
+MAILCHIMP_DEFAULT_COMMUNITYPARTNER_TAGS = json.loads(os.environ.get('MAILCHIMP_DEFAULT_COMMUNITYPARTNER_TAGS', '[]'))
 
 if 'SENTRY_DSN' in os.environ:
     import sentry_sdk
