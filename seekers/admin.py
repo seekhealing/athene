@@ -194,7 +194,7 @@ class HumanAdmin(HumanAdminMixin, admin.ModelAdmin):
         return super().get_fieldsets(request, obj)
     
     readonly_fields = ['show_id', 'created', 'updated']
-    list_display = ['first_names', 'last_names', 'email', 'phone_number', 'first_conversation']
+    list_display = ['first_names', 'last_names', 'email', 'phone_number', 'first_conversation', 'created']
     search_fields = ['last_names', 'first_names', 'email', 'phone_number']
 
     def enroll_as_seeker(self, request, queryset):
