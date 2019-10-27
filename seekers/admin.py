@@ -314,7 +314,7 @@ class SeekerAdmin(HumanAdminMixin, admin.ModelAdmin):
                        'connection_agent_organization'),
         }),
         ('Important dates', {
-            'fields': (('birthdate', 'sober_anniversary'), 'first_conversation'),
+            'fields': (('birthdate', 'sober_anniversary'), ('first_conversation', 'enroll_date')),
         }),
         ('Record history', {
             'fields': (('created', 'updated'), 'inactive_date'),
@@ -332,8 +332,8 @@ class SeekerAdmin(HumanAdminMixin, admin.ModelAdmin):
     readonly_fields = ['show_id', 'seeker_pairs', 'listener_trained', 
                        'extra_care', 'extra_care_graduate', 
                        'created', 'updated']
-    list_display = ['first_names', 'last_names', 'email', 'phone_number', 'listener_trained', 'extra_care', 
-                    'extra_care_graduate', 'is_active', 'is_connection_agent']
+    list_display = ['first_names', 'last_names', 'email', 'phone_number', 'enroll_date', 'listener_trained', 
+                    'extra_care', 'extra_care_graduate', 'is_active', 'is_connection_agent']
     list_display_links = ['first_names', 'last_names']
     list_filter = ['listener_trained', 'extra_care', 'extra_care_graduate', IsActiveFilter, IsConnectionAgentFilter,
                    PairingStatusFilter, ServiceFilter]

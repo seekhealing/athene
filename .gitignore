@@ -7,3 +7,4 @@ staticfiles/
 local/
 vendor/
 *.dump
+__pycache__/

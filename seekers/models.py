@@ -61,7 +61,8 @@ class Human(models.Model):
         return f'{self.first_names} {self.last_names}'
     
     def upgrade_to_seeker(self):
-        seeker = Seeker(human_ptr=self, 
+        seeker = Seeker(human_ptr=self,
+                        enroll_date=timezone.now().date(), 
                         **{field.name: getattr(self, field.name) for field in type(self)._meta.fields})
         seeker.save()
         if self.email:
@@ -104,6 +105,7 @@ TRANSPORTATION_CHOICES = [
 
 class Seeker(Human):
 
+    enroll_date = models.DateField(blank=True, null=True)
     inactive_date = models.DateField(blank=True, null=True)
 
     def is_active(self):
