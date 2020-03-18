@@ -31,7 +31,8 @@ class Command(BaseCommand):
             end=end,
             description=re.sub(r'\n+', '\n',
                                event['description'].replace('<br>', '\n')),
-            location=event['location']
+            location=event['location'],
+            hangoutLink=event.get('hangoutLink', '')
         )
 
     def handle(self, *args, **options):
