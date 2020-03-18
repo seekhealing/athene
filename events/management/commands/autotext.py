@@ -52,7 +52,7 @@ class Command(BaseCommand):
             if not events:
                 logger.warning(f'No events in the next {calendar_obj.autotext_days_in_advance} days for {calendar_obj}')
                 continue
-            normalized_events = [self.normalize_event(event) for event in events]
+            normalized_events = [self.normalize_event(event) for event in events if 'dateTime' in event['start']]
             if options['test_human']:
                 test_user = User.objects.get(username=options['test_human'])
                 test_human = Human.objects.get(email=test_user.email)
