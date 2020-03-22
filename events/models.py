@@ -50,12 +50,15 @@ class HumanAttendance(models.Model):
     @cached_property
     def event(self):
         if not self.event_id:
-            return None
-        event_obj = google.calendar.get_event(self.calendar.calendar_id, self.event_id)
+            return {}
+        try:
+            event_obj = google.calendar.get_event(self.calendar.calendar_id, self.event_id)
+        except ValueError:
+            return {}
         return event_obj
     
     def __str__(self):
-        return f'{self.human} went to {self.event["summary"]}'
+        return f'{self.human} went to {self.event.get("summary") or "Unknown event"}'
     
     class Meta:
         verbose_name = 'Event attendance'

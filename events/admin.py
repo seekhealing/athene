@@ -53,14 +53,20 @@ class HumanAttendanceAdmin(admin.ModelAdmin):
     
     def process_event(self, calendar_obj, event):
         local_tz = timezone(settings.TIME_ZONE)
+        if 'dateTime' in event['start']:
+            start_dt = parser.parse(event['start']['dateTime']).astimezone(local_tz)
+            end_dt = parser.parse(event['end']['dateTime']).astimezone(local_tz)
+        else:
+            start_dt = parser.parse(event['start']['date']).astimezone(local_tz)
+            end_dt = parser.parse(event['end']['date']).astimezone(local_tz)
         return dict(
             calendar_id=calendar_obj.calendar_id,
             summary=event['summary'],
             event_id=event['id'],
-            location=event['location'],
+            location=event.get('location', ''),
             recurring_event_id=event.get('recurringEventId'),
-            start_dt=parser.parse(event['start']['dateTime']).astimezone(local_tz),
-            end_dt=parser.parse(event['end']['dateTime']).astimezone(local_tz)
+            start_dt=start_dt,
+            end_dt=end_dt
         )
 
     def response_add(self, request, obj, post_url_continue=None):
