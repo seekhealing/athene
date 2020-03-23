@@ -79,12 +79,14 @@ class HumanCalendarSubscription(models.Model):
     def __str__(self):
         return f'{self.human} subscribed to {self.calendar}'
 
-    def send_events_summary(self, events, test=False):
+    def send_events_summary(self, events, extra_context=None, test=False):
         logger.debug(f'Sending to event summary to {self.human} via {self.get_contact_method_display()}')
+        extra_context = extra_context or dict()
         context = dict(
             human=self.human,
             events=events,
-            calendar=self.calendar
+            calendar=self.calendar,
+            **extra_context
         )
         template_path = f'events/autotext/{self.get_contact_method_display().lower()}.txt'
         template_obj = loader.get_template(template_path)

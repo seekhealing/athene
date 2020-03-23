@@ -21,6 +21,8 @@ class Command(BaseCommand):
                             help='Username of a user to send a test message to.')
         parser.add_argument('--dry-run', action='store_true', dest='dry_run', default=False,
                             help='Do everything except actually send anything.')
+        parser.add_argument('--sms-opening', action='store')
+        parser.add_argument('--email-opening', action='store')
 
     def normalize_event(self, event):
         begin = parse(event['start']['dateTime']).astimezone(pytz.timezone('US/Eastern'))
@@ -65,5 +67,9 @@ class Command(BaseCommand):
             else:
                 subscribers = calendar_obj.humancalendarsubscription_set.all()
             for subscriber in subscribers:
-                subscriber.send_events_summary(normalized_events, test=options['dry_run'])
+                subscriber.send_events_summary(normalized_events, 
+                                               extra_context=dict(
+                                                   sms_opening=options.get('sms_opening'),
+                                                   email_opening=options.get('email_opening')),
+                                               test=options['dry_run'])
 

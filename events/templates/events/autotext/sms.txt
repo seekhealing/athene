@@ -1,4 +1,4 @@
-{% autoescape off %}Upcoming {{ calendar.name }}: {% for event in events %}
+{% autoescape off %}{% if sms_opening %}{{ sms_opening }}{% else %}Upcoming {{ calendar.name }}: {% endif %}{% for event in events %}
 ** {{ event.name }}{% if event.location %} @ {{ event.location }}{% endif %}{% if event.hangoutLink %}, online at {{ event.hangoutLink }}{% endif %}, {{ event.begin|date:"D N j, Y, P" }} 
 {% endfor %}
 Email info@seekhealing.org to unsub.{% endautoescape %}

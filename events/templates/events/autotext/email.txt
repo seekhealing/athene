@@ -1,6 +1,6 @@
 {% autoescape off %}Hello, {{ human }}!
 
-This is your bi-weekly reminder about upcoming {{ calendar.name }}!
+{% if email_opening %}{{ email_opening }}{% else %}This is your bi-weekly reminder about upcoming {{ calendar.name }}!{% endif %}
 
 {% for event in events %}
 --------------------------------------------------------------------------------
