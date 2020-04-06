@@ -23,6 +23,8 @@ class Command(BaseCommand):
                             help='Do everything except actually send anything.')
         parser.add_argument('--sms-opening', action='store')
         parser.add_argument('--email-opening', action='store')
+        parser.add_argument('--sms-only', action='store_true')
+        parser.add_argument('--email-only', action='store_true')
 
     def normalize_event(self, event):
         begin = parse(event['start']['dateTime']).astimezone(pytz.timezone('US/Eastern'))
@@ -61,6 +63,12 @@ class Command(BaseCommand):
                 logger.warning(f'No events in the next {calendar_obj.autotext_days_in_advance} days for {calendar_obj}')
                 continue
             normalized_events = [self.normalize_event(event) for event in events if 'dateTime' in event['start']]
+            if options['sms_only']:
+                allowed_contact_methods = [2]
+            elif options['email_only']:
+                allowed_contact_methods = [1]
+            else:
+                allowed_contact_methods = [1, 2]
             if options['test_human']:
                 test_user = User.objects.get(username=options['test_human'])
                 test_human = Human.objects.get(email=test_user.email)
@@ -69,9 +77,9 @@ class Command(BaseCommand):
                     calendar=calendar_obj,
                     human=test_human,
                     contact_method=contact_method
-                ) for contact_method, _ in models.CONTACT_PREFERENCES]
+                ) for contact_method in allowed_contact_methods]
             else:
-                subscribers = calendar_obj.humancalendarsubscription_set.all()
+                subscribers = calendar_obj.humancalendarsubscription_set.filter(contact_method__in=allowed_contact_methods)
             for subscriber in subscribers:
                 subscriber.send_events_summary(normalized_events, 
                                                extra_context=dict(
