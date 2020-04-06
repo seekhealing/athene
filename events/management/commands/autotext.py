@@ -27,14 +27,20 @@ class Command(BaseCommand):
     def normalize_event(self, event):
         begin = parse(event['start']['dateTime']).astimezone(pytz.timezone('US/Eastern'))
         end = parse(event['end']['dateTime']).astimezone(pytz.timezone('US/Eastern'))
+        description = re.sub(r'\n+', '\n',
+                             event['description'].replace('<br>', '\n').replace('&nbsp;', ' '))
+        zoom_link = re.search(r'https://zoom\.us/j/[0-9]{10}', description)
+        if zoom_link:
+            hangout_link = zoom_link.group(0)
+        else:
+            hangout_link = event.get('hangoutLink', '')
         return dict(
             name=event['summary'],
             begin=begin,
             end=end,
-            description=re.sub(r'\n+', '\n',
-                               event['description'].replace('<br>', '\n').replace('&nbsp;', ' ')),
+            description=description,
             location=event.get('location'),
-            hangoutLink=event.get('hangoutLink', '')
+            hangoutLink=hangout_link
         )
 
     def handle(self, *args, **options):

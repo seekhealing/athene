@@ -11,8 +11,6 @@
 
 {{ event.begin|date:"l F j, Y, P" }}{% if event.end %} to {{ event.end|date:"TIME_FORMAT" }}{% endif %}
 {% if event.location %}{{ event.location|striptags|wordwrap:80|safe }}{% endif %}
-{% if event.hangoutLink %}Attend virtually with this link: {{ event.hangoutLink }}
-{% endif %}
 {% endfor %}
 
 This is an automated message. If you would like to change your notification 
