@@ -1,4 +1,6 @@
 {% autoescape off %}{% if sms_opening %}{{ sms_opening }}{% else %}Upcoming {{ calendar.name }}: {% endif %}{% for event in events %}
-** {{ event.name }}{% if event.location %} @ {{ event.location }}{% endif %}{% if event.hangoutLink %}, online at {{ event.hangoutLink }}{% endif %}, {{ event.begin|date:"D N j, Y, P" }} 
+** {{ event.name }}{% if event.location %} @ {{ event.location }}{% endif %}, {{ event.begin|date:"D N j, Y, P" }} 
 {% endfor %}
+Want to connect with somebody 1-on-1 right now? Call the Listening Line at 828-547-0222 and press 2, or join us on Discord to find another seeker to connect with: https://discord.gg/Wn54DF
+
 Email info@seekhealing.org to unsub.{% endautoescape %}

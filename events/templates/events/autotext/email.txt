@@ -4,14 +4,39 @@
 
 {% for event in events %}
 --------------------------------------------------------------------------------
-{{ event.name }}
---------------------------------------------------------------------------------
-
-{{ event.description|striptags|wordwrap:80|safe }}
-
 {{ event.begin|date:"l F j, Y, P" }}{% if event.end %} to {{ event.end|date:"TIME_FORMAT" }}{% endif %}
+--------------------------------------------------------------------------------
+{{ event.name }}
 {% if event.location %}{{ event.location|striptags|wordwrap:80|safe }}{% endif %}
 {% endfor %}
 
+--------------------------------------------------------------------------------
+What's a Connection Practice meeting?
+--------------------------------------------------------------------------------
+
+A meeting to practice your skills in listening and connecting with others. No 
+conversation topic is off limits. The only objective of the meeting is to feel 
+a genuine sense of connection by the time it's over, and the only rule is that 
+we promise to not give each other advice. 
+
+One seeker always facilitates the meeting (to guide the conversation, manage 
+time, and introduce different exercises to help the group feel connected), and 
+another always volunteers as Space Owl (to step aside with anyone who has a big
+emotional experience and needs 1-on-1 connection). 
+
+There is no hierarchy in Connection Practice meetings, and everyone is 
+encouraged to share equally and freely, including the person who facilitates.
+
+
+
+--------------------------------------------------------------------------------
+Want to connect with somebody 1-on-1 right now?
+--------------------------------------------------------------------------------
+
+Call the Listening Line at 828-547-0222 and press 2, or join us on Discord to 
+find another seeker to connect with: https://discord.gg/Wn54DF
+
+
+---
 This is an automated message. If you would like to change your notification 
 preferences, email info@seekhealing.org to do so. See you soon!{% endautoescape %}
