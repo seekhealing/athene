@@ -150,6 +150,10 @@ LOGGING = {
             'handlers': ['default'],
             'level': 'DEBUG',
         },
+        'celery.tasks': {
+            'handlers': ['default'],
+            'level': 'DEBUG'
+        }
     } 
 }
 
@@ -203,3 +207,15 @@ if 'SENTRY_DSN' in os.environ:
 SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
 SESSION_COOKIE_HTTPONLY = True
 
+EMAIL_BACKEND = ('django.core.mail.backends.console.EmailBackend' 
+                 if DEBUG else
+                 'django.core.mail.backends.smtp.EmailBackend')
+EMAIL_HOST = os.environ.get('MAILGUN_SMTP_SERVER', '')
+EMAIL_PORT = os.environ.get('MAILGUN_SMTP_PORT', '')
+EMAIL_HOST_USER = os.environ.get('MAILGUN_SMTP_LOGIN', '')
+EMAIL_HOST_PASSWORD = os.environ.get('MAILGUN_SMTP_PASSWORD', '')
+DEFAULT_FROM_EMAIL = 'athene@seekers.seekhealing.org'
+
+
+CELERY_BROKER_URL = os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379/1')
+CELERY_RESULT_BACKEND = os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379/1') 

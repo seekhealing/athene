@@ -1,5 +1,4 @@
 import logging
-logger = logging.getLogger(__name__)
 
 from django.db import models
 from django.core.exceptions import ValidationError
@@ -8,7 +7,10 @@ from django.utils.functional import cached_property
 from django.utils.timezone import now
 from multiselectfield import MultiSelectField
 
-from . import google, twilio
+from seekers import tasks, constants
+from . import google
+
+logger = logging.getLogger(__name__)
 
 DAYS_OF_WEEK = [
     (0, 'Sunday'),
@@ -19,6 +21,7 @@ DAYS_OF_WEEK = [
     (5, 'Friday'),
     (6, 'Saturday')
 ]
+
 
 class Calendar(models.Model):
     calendar_id = models.CharField(max_length=250, primary_key=True)
@@ -65,11 +68,12 @@ class HumanAttendance(models.Model):
         verbose_name_plural = 'Event attendance'
         unique_together = [('human', 'calendar', 'event_id')]
 
+
 CONTACT_PREFERENCES = [
-    (1, 'Email'),
-    (2, 'SMS'),
-    # (3, 'Facebook')
+    (constants.EMAIL, 'Email'),
+    (constants.SMS, 'SMS'),
 ]
+
 
 class HumanCalendarSubscription(models.Model):
     human = models.ForeignKey('seekers.Human', on_delete=models.CASCADE)
@@ -79,7 +83,7 @@ class HumanCalendarSubscription(models.Model):
     def __str__(self):
         return f'{self.human} subscribed to {self.calendar}'
 
-    def send_events_summary(self, events, extra_context=None, test=False):
+    def send_events_summary(self, events, extra_context=None):
         logger.debug(f'Sending to event summary to {self.human} via {self.get_contact_method_display()}')
         extra_context = extra_context or dict()
         context = dict(
@@ -91,21 +95,11 @@ class HumanCalendarSubscription(models.Model):
         template_path = f'events/autotext/{self.get_contact_method_display().lower()}.txt'
         template_obj = loader.get_template(template_path)
         content = template_obj.render(context)
-        if self.contact_method == 1: # email
-            if not self.human.email:
-                logger.warning(f'Human {self.human} is set to receive {self.calendar} via email but has no email address')
-                return
-            today = Template('{{ timestamp|date:"DATE_FORMAT" }}').render(
-                Context(dict(timestamp=now()))
-            )
-            google.gmail.send_email('info@seekhealing.org', self.human.email,
-                                    f'Upcoming {self.calendar.name} - {today}',
-                                    content, test=test)
-        elif self.contact_method == 2: # sms
-            if not self.human.phone_number:
-                logger.warning(f'Human {self.human} is set to receive {self.calendar} via SMS but has no phone number')
-                return
-            twilio.sms.send_text(str(self.human.phone_number), content, test=test)
+        today = Template('{{ timestamp|date:"DATE_FORMAT" }}').render(
+            Context(dict(timestamp=now()))
+        )
+        email_subject = f'Upcoming {self.calendar.name} - {today}'
+        tasks.send_message.delay(self.human.id, self.contact_method, content, email_subject)
 
     class Meta:
         unique_together = [('human', 'calendar')]

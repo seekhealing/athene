@@ -3,6 +3,7 @@ logger = logging.getLogger(__name__)
 
 import os
 
+from django.conf import settings
 import requests
 
 class SMS(object):
@@ -13,12 +14,11 @@ class SMS(object):
             password=os.environ.get('TWILIO_API_PASSWORD'))
         self.my_phone_number = os.environ.get('TWILIO_PHONE_NUMBER')
 
-    def send_text(self, recipient, content, test=False):
+    def send_text(self, recipient, content):
         try:
             logger.info(f'Sending SMS to {recipient}')
-            if test:
-                logger.debug('Test SMS content:')
-                logger.debug(f'{content}')
+            if settings.DEBUG:
+                logger.info(f'{content}')
             else:
                 response = requests.post(
                     f'https://api.twilio.com/2010-04-01/Accounts/{self.username}/Messages.json',

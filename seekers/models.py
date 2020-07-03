@@ -1,7 +1,4 @@
 import logging
-logger = logging.getLogger(__name__)
-
-import decimal
 import random
 import string
 from django.conf import settings
@@ -16,7 +13,11 @@ import googlemaps
 from localflavor.us.models import USStateField, USZipCodeField
 from phonenumber_field.modelfields import PhoneNumberField
 
+from . import constants
 from . import mailchimp
+
+
+logger = logging.getLogger(__name__)
 
 
 def id_gen():
@@ -31,10 +32,10 @@ def id_gen():
         power -= 1
     return id_str
 
+
 CONTACT_PREFERENCES = [
-    (1, 'Email'),
-    (2, 'SMS'),
-    (3, 'Facebook')
+    (constants.EMAIL, 'Email'),
+    (constants.SMS, 'SMS'),
 ]
 
 

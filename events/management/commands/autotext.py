@@ -19,8 +19,6 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('--test-human', action='store', dest='test_human',
                             help='Username of a user to send a test message to.')
-        parser.add_argument('--dry-run', action='store_true', dest='dry_run', default=False,
-                            help='Do everything except actually send anything.')
         parser.add_argument('--sms-opening', action='store')
         parser.add_argument('--email-opening', action='store')
         parser.add_argument('--sms-only', action='store_true')
@@ -84,6 +82,5 @@ class Command(BaseCommand):
                 subscriber.send_events_summary(normalized_events, 
                                                extra_context=dict(
                                                    sms_opening=options.get('sms_opening'),
-                                                   email_opening=options.get('email_opening')),
-                                               test=options['dry_run'])
+                                                   email_opening=options.get('email_opening')))
 
