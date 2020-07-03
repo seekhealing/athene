@@ -1,3 +1,4 @@
+# flake8: noqa
 import copy
 from decimal import Decimal
 import logging
@@ -33,7 +34,7 @@ class HumanNoteAdmin(admin.StackedInline):
     model = models.HumanNote
     extra = 1
     template = "admin/edit_inline/stacked_safe_display.html"
-    fieldsets = (None, {"fields": ("note",)})
+    fieldsets = ((None, {"fields": ("note",)}),)
 
     def has_change_permission(self, request, obj=None):
         return False
@@ -153,11 +154,11 @@ class HumanAdmin(HumanAdminMixin, admin.ModelAdmin):
     fieldsets = [
         (
             None,
-            {"fields": ["show_id", ("first_names", "last_names"), "street_address", ("city", "state", "zip_code")]},
+            {"fields": ["show_id", ("first_names", "last_names"), "street_address", ("city", "state", "zip_code")],},
         ),
         ("Contact information", {"fields": (("email", "phone_number"), "contact_preference")}),
-        ("Important dates", {"fields": (("birthdate", "sober_anniversary"), "first_conversation")}),
-        ("Record history", {"fields": (("created", "updated"))}),
+        ("Important dates", {"fields": (("birthdate", "sober_anniversary"), "first_conversation"),}),
+        ("Record history", {"fields": (("created", "updated"),),}),
     ]
 
     def _get_obj_does_not_exist_redirect(self, request, opts, object_id):
@@ -296,11 +297,11 @@ class SeekerAdmin(HumanAdminMixin, admin.ModelAdmin):
                 "fields": (
                     ("ready_to_pair", "ride_share", "space_holder", "activity_buddy", "outreach"),
                     "connection_agent_organization",
-                )
+                ),
             },
         ),
-        ("Important dates", {"fields": (("birthdate", "sober_anniversary"), ("first_conversation", "enroll_date"))}),
-        ("Record history", {"fields": (("created", "updated"), "inactive_date")}),
+        ("Important dates", {"fields": (("birthdate", "sober_anniversary"), ("first_conversation", "enroll_date")),}),
+        ("Record history", {"fields": (("created", "updated"), "inactive_date"),}),
     )
 
     def get_fieldsets(self, request, obj=None):
@@ -473,9 +474,9 @@ class CommunityPartnerAdmin(HumanAdminMixin, admin.ModelAdmin):
     inlines = [HumanNoteAdmin, HumanCalendarSubscriptionAdmin]
 
     fieldsets = (
-        (None, {"fields": ["show_id", ("first_names", "last_names"), ("city", "state"), "organization"]}),
+        (None, {"fields": ["show_id", ("first_names", "last_names"), ("city", "state"), "organization"],}),
         ("Contact information", {"fields": (("email", "phone_number"), "contact_preference")}),
-        ("Record history", {"fields": (("created", "updated"))}),
+        ("Record history", {"fields": (("created", "updated"),),}),
     )
     readonly_fields = ["show_id", "created", "updated"]
     list_display = ["first_names", "last_names", "email", "phone_number"]
