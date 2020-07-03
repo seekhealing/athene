@@ -53,7 +53,7 @@ def mass_text(modeladmin, request, queryset):
         form_obj = MassTextForm(request.POST)
         if form_obj.is_valid():
             for human_obj in queryset:
-                tasks.send_message(
+                tasks.send_message.delay(
                     human_obj.pk,
                     human_obj.contact_preference,
                     form_obj.cleaned_data.get(
@@ -61,7 +61,7 @@ def mass_text(modeladmin, request, queryset):
                     ),
                     form_obj.cleaned_data.get("email_subject"),
                 )
-            modeladmin.message_user(request, f"Sent email/SMS to {len(queryset)} human(s).", messages.SUCCESS)
+            modeladmin.message_user(request, f"Sending email/SMS to {len(queryset)} human(s).", messages.SUCCESS)
             return None
     else:
         form_obj = MassTextForm()

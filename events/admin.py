@@ -2,14 +2,17 @@ import datetime
 
 from dateutil import parser
 from django.conf import settings
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.contrib.admin.widgets import AdminDateWidget
 from django.utils.timezone import localdate
+from django.template.response import TemplateResponse
 from django import forms
 from pytz import timezone
 
 from . import models
 from .google import calendar as client
+from seekers.forms import MassTextForm
+from seekers import tasks, constants
 
 
 class HumanCalendarSubscriptionAdmin(admin.TabularInline):
@@ -18,8 +21,42 @@ class HumanCalendarSubscriptionAdmin(admin.TabularInline):
     classes = ["collapse"]
 
 
+def mass_text(modeladmin, request, queryset):
+    if request.POST.get("submitted"):
+        form_obj = MassTextForm(request.POST)
+        if form_obj.is_valid():
+            recipients = (
+                models.HumanCalendarSubscription.objects.filter(calendar__in=queryset.values_list("pk", flat=True))
+                .values_list("human", "contact_method")
+                .distinct()
+            )
+            for human_id, contact_method in recipients:
+                tasks.send_message.delay(
+                    human_id,
+                    contact_method,
+                    form_obj.cleaned_data.get("sms_body" if contact_method == constants.SMS else "email_body"),
+                    form_obj.cleaned_data.get("email_subject"),
+                )
+            modeladmin.message_user(request, f"Sending email/SMS to {len(recipients)} human(s).", messages.SUCCESS)
+            return None
+    else:
+        form_obj = MassTextForm()
+    context = dict(
+        form=form_obj,
+        queryset=queryset,
+        title=f"Send mass communication to {modeladmin.model._meta.verbose_name_plural}",
+        opts=modeladmin.model._meta,
+        media=modeladmin.media,
+    )
+    return TemplateResponse(request, "admin/seekers/mass_text.html", context)
+
+
+mass_text.short_description = "Send mass communication"
+
+
 class CalendarAdmin(admin.ModelAdmin):
     model = models.Calendar
+    actions = [mass_text]
 
 
 class CheckinModelForm(forms.ModelForm):

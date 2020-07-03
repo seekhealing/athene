@@ -11,13 +11,18 @@ logger = logging.getLogger(__name__)
 class SMS(object):
     def __init__(self):
         self.username = os.environ.get("TWILIO_API_USERNAME")
-        self.auth = requests.auth.HTTPBasicAuth(username=self.username, password=os.environ.get("TWILIO_API_PASSWORD"))
-        self.my_phone_number = os.environ.get("TWILIO_PHONE_NUMBER")
+        if self.username:
+            self.auth = requests.auth.HTTPBasicAuth(
+                username=self.username, password=os.environ.get("TWILIO_API_PASSWORD")
+            )
+            self.my_phone_number = os.environ.get("TWILIO_PHONE_NUMBER")
+        else:
+            self.auth = self.my_phone_number = None
 
     def send_text(self, recipient, content):
         try:
             logger.info(f"Sending SMS to {recipient}")
-            if settings.DEBUG:
+            if settings.DEBUG or not self.auth:
                 logger.info(f"{content}")
             else:
                 response = requests.post(
