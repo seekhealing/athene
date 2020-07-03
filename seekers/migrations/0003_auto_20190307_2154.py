@@ -7,18 +7,16 @@ import localflavor.us.models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('seekers', '0002_auto_20190307_2044'),
+        ("seekers", "0002_auto_20190307_2044"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='seeker',
-            name='street_address',
-            field=models.CharField(blank=True, max_length=120),
+            model_name="seeker", name="street_address", field=models.CharField(blank=True, max_length=120),
         ),
         migrations.AddField(
-            model_name='seeker',
-            name='zip_code',
+            model_name="seeker",
+            name="zip_code",
             field=localflavor.us.models.USZipCodeField(blank=True, max_length=10),
         ),
     ]

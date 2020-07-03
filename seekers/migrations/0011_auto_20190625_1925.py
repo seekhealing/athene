@@ -7,23 +7,13 @@ import seekers.models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('seekers', '0010_auto_20190625_1749'),
+        ("seekers", "0010_auto_20190625_1749"),
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='seeker',
-            name='ready_to_pair',
-            field=models.BooleanField(default=False),
-        ),
-        migrations.AddField(
-            model_name='seekerpairing',
-            name='notes',
-            field=models.TextField(blank=True),
-        ),
+        migrations.AddField(model_name="seeker", name="ready_to_pair", field=models.BooleanField(default=False),),
+        migrations.AddField(model_name="seekerpairing", name="notes", field=models.TextField(blank=True),),
         migrations.AlterField(
-            model_name='seekerpairing',
-            name='pair_date',
-            field=models.DateField(default=seekers.models.today),
+            model_name="seekerpairing", name="pair_date", field=models.DateField(default=seekers.models.today),
         ),
     ]

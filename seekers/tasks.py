@@ -16,11 +16,11 @@ def send_message(human_id, contact_method, message, subject=None):
     human_obj = Human.objects.get(id=human_id)
     if contact_method == EMAIL:
         if not human_obj.email:
-            logger.warning(f'Tried sending message to {human_obj} via email but has no email address')
+            logger.warning(f"Tried sending message to {human_obj} via email but has no email address")
             return
         send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [human_obj.email])
     elif contact_method == SMS:
         if not human_obj.phone_number:
-            logger.warning(f'Tried sending message to {human_obj} via SMS but has no phone number')
+            logger.warning(f"Tried sending message to {human_obj} via SMS but has no phone number")
             return
         twilio.sms.send_text(str(human_obj.phone_number), message)

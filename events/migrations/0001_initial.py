@@ -10,47 +10,61 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('seekers', '0001_initial'),
+        ("seekers", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Calendar',
+            name="Calendar",
             fields=[
-                ('calendar_id', models.CharField(max_length=250, primary_key=True, serialize=False)),
-                ('name', models.CharField(editable=False, max_length=120)),
-                ('inactive_date', models.DateField(blank=True, null=True)),
-                ('track_attendance', models.BooleanField(default=False)),
-                ('send_autotext_days', multiselectfield.db.fields.MultiSelectField(blank=True, choices=[(0, 'Monday'), (1, 'Tuesday'), (2, 'Wednesday'), (3, 'Thursday'), (4, 'Friday'), (5, 'Saturday'), (6, 'Sunday')], max_length=13)),
-                ('send_autotext_time', models.TimeField(blank=True, null=True)),
+                ("calendar_id", models.CharField(max_length=250, primary_key=True, serialize=False)),
+                ("name", models.CharField(editable=False, max_length=120)),
+                ("inactive_date", models.DateField(blank=True, null=True)),
+                ("track_attendance", models.BooleanField(default=False)),
+                (
+                    "send_autotext_days",
+                    multiselectfield.db.fields.MultiSelectField(
+                        blank=True,
+                        choices=[
+                            (0, "Monday"),
+                            (1, "Tuesday"),
+                            (2, "Wednesday"),
+                            (3, "Thursday"),
+                            (4, "Friday"),
+                            (5, "Saturday"),
+                            (6, "Sunday"),
+                        ],
+                        max_length=13,
+                    ),
+                ),
+                ("send_autotext_time", models.TimeField(blank=True, null=True)),
             ],
         ),
         migrations.CreateModel(
-            name='HumanAttendance',
+            name="HumanAttendance",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('event_id', models.CharField(db_index=True, max_length=120)),
-                ('recurring_event_id', models.CharField(blank=True, db_index=True, max_length=120)),
-                ('created', models.DateTimeField(auto_now_add=True)),
-                ('calendar', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='events.Calendar')),
-                ('human', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='seekers.Human', verbose_name='Attendee')),
+                ("id", models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("event_id", models.CharField(db_index=True, max_length=120)),
+                ("recurring_event_id", models.CharField(blank=True, db_index=True, max_length=120)),
+                ("created", models.DateTimeField(auto_now_add=True)),
+                ("calendar", models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="events.Calendar")),
+                (
+                    "human",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="seekers.Human", verbose_name="Attendee"
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='SeekerCalendarSubscription',
+            name="SeekerCalendarSubscription",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('contact_method', models.IntegerField(choices=[(1, 'Email'), (2, 'SMS')])),
-                ('calendar', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='events.Calendar')),
-                ('seeker', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='seekers.Seeker')),
+                ("id", models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("contact_method", models.IntegerField(choices=[(1, "Email"), (2, "SMS")])),
+                ("calendar", models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="events.Calendar")),
+                ("seeker", models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="seekers.Seeker")),
             ],
         ),
-        migrations.AlterUniqueTogether(
-            name='seekercalendarsubscription',
-            unique_together={('seeker', 'calendar')},
-        ),
-        migrations.AlterUniqueTogether(
-            name='humanattendance',
-            unique_together={('human', 'calendar', 'event_id')},
-        ),
+        migrations.AlterUniqueTogether(name="seekercalendarsubscription", unique_together={("seeker", "calendar")},),
+        migrations.AlterUniqueTogether(name="humanattendance", unique_together={("human", "calendar", "event_id")},),
     ]

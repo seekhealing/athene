@@ -5,7 +5,7 @@
 {% if original.street_address %}
 <li><a href="{% url "admin:seekers_seeker_ride" object_id %}" class="related-widget-wrapper-link">Find a Ride</a></li>
 {% endif %}
-<li><a href="{% url "admin:seekers_seekerbenefitproxy_change" object_id %}?_to_field=id&_popup=1" 
+<li><a href="{% url "admin:seekers_seekerbenefitproxy_change" object_id %}?_to_field=id&_popup=1"
        class="related-widget-wrapper-link change-related"
        id="change_id_seekerbenefit">Seeker benefits</a></li>
 {{ block.super }}

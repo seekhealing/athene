@@ -8,23 +8,16 @@ import multiselectfield.db.fields
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('seekers', '0004_seeker_transportation'),
-        ('events', '0003_auto_20190309_1529'),
+        ("seekers", "0004_seeker_transportation"),
+        ("events", "0003_auto_20190309_1529"),
     ]
 
     operations = [
-        migrations.RenameModel(
-            old_name='SeekerCalendarSubscription',
-            new_name='HumanCalendarSubscription'
-        ),
-        migrations.RenameField(
-            'HumanCalendarSubscription',
-            old_name='seeker',
-            new_name='human'
-        ),
+        migrations.RenameModel(old_name="SeekerCalendarSubscription", new_name="HumanCalendarSubscription"),
+        migrations.RenameField("HumanCalendarSubscription", old_name="seeker", new_name="human"),
         migrations.AlterField(
-            'HumanCalendarSubscription',
-            'human',
-            models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='seekers.Human')
-        )
+            "HumanCalendarSubscription",
+            "human",
+            models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="seekers.Human"),
+        ),
     ]

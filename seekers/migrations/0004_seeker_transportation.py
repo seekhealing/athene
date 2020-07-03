@@ -6,13 +6,15 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('seekers', '0003_auto_20190307_2154'),
+        ("seekers", "0003_auto_20190307_2154"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='seeker',
-            name='transportation',
-            field=models.IntegerField(blank=True, choices=[(1, 'Has a car'), (2, 'Public transit/Lyft'), (3, 'Homebound')], null=True),
+            model_name="seeker",
+            name="transportation",
+            field=models.IntegerField(
+                blank=True, choices=[(1, "Has a car"), (2, "Public transit/Lyft"), (3, "Homebound")], null=True
+            ),
         ),
     ]

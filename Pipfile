@@ -9,6 +9,8 @@ pylint-django = "*"
 rope = "*"
 django-debug-toolbar = "*"
 flake8 = "*"
+pre-commit = "*"
+black = "*"
 
 [packages]
 django = "*"
@@ -34,3 +36,6 @@ redis = "*"
 
 [requires]
 python_version = "3.7"
+
+[pipenv]
+allow_prereleases = true

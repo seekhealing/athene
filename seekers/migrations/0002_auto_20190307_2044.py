@@ -6,55 +6,34 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('seekers', '0001_initial'),
+        ("seekers", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='human',
-            options={'ordering': ['last_names', 'first_names'], 'verbose_name': 'Prospect'},
+            name="human", options={"ordering": ["last_names", "first_names"], "verbose_name": "Prospect"},
         ),
+        migrations.AlterModelOptions(name="humannote", options={"ordering": ("-created",), "verbose_name": "Note"},),
         migrations.AlterModelOptions(
-            name='humannote',
-            options={'ordering': ('-created',), 'verbose_name': 'Note'},
+            name="seekermilestone", options={"ordering": ["date"], "verbose_name": "Milestone"},
         ),
-        migrations.AlterModelOptions(
-            name='seekermilestone',
-            options={'ordering': ['date'], 'verbose_name': 'Milestone'},
-        ),
-        migrations.AddField(
-            model_name='seeker',
-            name='activity_buddy',
-            field=models.BooleanField(default=False),
-        ),
-        migrations.AddField(
-            model_name='seeker',
-            name='outreach',
-            field=models.BooleanField(default=False),
-        ),
-        migrations.AddField(
-            model_name='seeker',
-            name='ride_share',
-            field=models.BooleanField(default=False),
-        ),
-        migrations.AddField(
-            model_name='seeker',
-            name='space_holder',
-            field=models.BooleanField(default=False),
+        migrations.AddField(model_name="seeker", name="activity_buddy", field=models.BooleanField(default=False),),
+        migrations.AddField(model_name="seeker", name="outreach", field=models.BooleanField(default=False),),
+        migrations.AddField(model_name="seeker", name="ride_share", field=models.BooleanField(default=False),),
+        migrations.AddField(model_name="seeker", name="space_holder", field=models.BooleanField(default=False),),
+        migrations.AlterField(
+            model_name="seeker",
+            name="extra_care",
+            field=models.BooleanField(default=False, editable=False, verbose_name="Extra care program"),
         ),
         migrations.AlterField(
-            model_name='seeker',
-            name='extra_care',
-            field=models.BooleanField(default=False, editable=False, verbose_name='Extra care program'),
+            model_name="seeker",
+            name="extra_care_graduate",
+            field=models.BooleanField(default=False, editable=False, verbose_name="Extra care graduate"),
         ),
         migrations.AlterField(
-            model_name='seeker',
-            name='extra_care_graduate',
-            field=models.BooleanField(default=False, editable=False, verbose_name='Extra care graduate'),
-        ),
-        migrations.AlterField(
-            model_name='seeker',
-            name='listener_trained',
-            field=models.BooleanField(default=False, editable=False, verbose_name='Listener trained'),
+            model_name="seeker",
+            name="listener_trained",
+            field=models.BooleanField(default=False, editable=False, verbose_name="Listener trained"),
         ),
     ]

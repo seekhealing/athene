@@ -19,99 +19,129 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Human',
+            name="Human",
             fields=[
-                ('id', models.CharField(default=seekers.models.id_gen, editable=False, max_length=4, primary_key=True, serialize=False)),
-                ('first_names', models.CharField(max_length=120)),
-                ('last_names', models.CharField(max_length=120)),
-                ('email', models.EmailField(blank=True, max_length=254)),
-                ('phone_number', phonenumber_field.modelfields.PhoneNumberField(blank=True, max_length=128)),
-                ('city', models.CharField(blank=True, max_length=30)),
-                ('state', localflavor.us.models.USStateField(default='NC', max_length=2)),
-                ('created', models.DateTimeField(auto_now_add=True)),
-                ('updated', models.DateTimeField(auto_now=True)),
-                ('contact_preference', models.IntegerField(blank=True, choices=[(1, 'Email'), (2, 'SMS'), (3, 'Facebook')], null=True)),
+                (
+                    "id",
+                    models.CharField(
+                        default=seekers.models.id_gen, editable=False, max_length=4, primary_key=True, serialize=False
+                    ),
+                ),
+                ("first_names", models.CharField(max_length=120)),
+                ("last_names", models.CharField(max_length=120)),
+                ("email", models.EmailField(blank=True, max_length=254)),
+                ("phone_number", phonenumber_field.modelfields.PhoneNumberField(blank=True, max_length=128)),
+                ("city", models.CharField(blank=True, max_length=30)),
+                ("state", localflavor.us.models.USStateField(default="NC", max_length=2)),
+                ("created", models.DateTimeField(auto_now_add=True)),
+                ("updated", models.DateTimeField(auto_now=True)),
+                (
+                    "contact_preference",
+                    models.IntegerField(blank=True, choices=[(1, "Email"), (2, "SMS"), (3, "Facebook")], null=True),
+                ),
             ],
-            options={
-                'ordering': ['last_names', 'first_names'],
-            },
+            options={"ordering": ["last_names", "first_names"],},
         ),
         migrations.CreateModel(
-            name='HumanNote',
+            name="HumanNote",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created', models.DateTimeField(auto_now_add=True)),
-                ('note', ckeditor.fields.RichTextField()),
-                ('added_by', models.ForeignKey(editable=False, null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL)),
+                ("id", models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("created", models.DateTimeField(auto_now_add=True)),
+                ("note", ckeditor.fields.RichTextField()),
+                (
+                    "added_by",
+                    models.ForeignKey(
+                        editable=False,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
-            options={
-                'ordering': ('-created',),
-            },
+            options={"ordering": ("-created",),},
         ),
         migrations.CreateModel(
-            name='SeekerMilestone',
+            name="SeekerMilestone",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('date', models.DateField()),
-                ('milestone', models.IntegerField(choices=[(1, 'Listening trained'), (2, 'Extra-care enrolled'), (3, 'Extra-care graduated')])),
+                ("id", models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("date", models.DateField()),
+                (
+                    "milestone",
+                    models.IntegerField(
+                        choices=[(1, "Listening trained"), (2, "Extra-care enrolled"), (3, "Extra-care graduated")]
+                    ),
+                ),
             ],
-            options={
-                'ordering': ['date'],
-            },
+            options={"ordering": ["date"],},
         ),
         migrations.CreateModel(
-            name='SeekerPairing',
+            name="SeekerPairing",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('pair_date', models.DateField(auto_now=True)),
-                ('unpair_date', models.DateField(blank=True, null=True)),
+                ("id", models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("pair_date", models.DateField(auto_now=True)),
+                ("unpair_date", models.DateField(blank=True, null=True)),
             ],
-            options={
-                'ordering': ['pair_date'],
-            },
+            options={"ordering": ["pair_date"],},
         ),
         migrations.CreateModel(
-            name='Seeker',
+            name="Seeker",
             fields=[
-                ('human_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='seekers.Human')),
-                ('birthdate', models.DateField(blank=True, null=True)),
-                ('sober_anniversary', models.DateField(blank=True, null=True)),
-                ('inactive_date', models.DateField(blank=True, null=True)),
-                ('facebook_username', models.CharField(blank=True, max_length=30)),
-                ('facebook_alias', models.CharField(blank=True, max_length=120)),
-                ('listener_trained', models.BooleanField(default=False, editable=False, verbose_name='Listener trained?')),
-                ('extra_care', models.BooleanField(default=False, editable=False, verbose_name='Extra care program?')),
-                ('extra_care_graduate', models.BooleanField(default=False, editable=False, verbose_name='Extra care graduate?')),
+                (
+                    "human_ptr",
+                    models.OneToOneField(
+                        auto_created=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        parent_link=True,
+                        primary_key=True,
+                        serialize=False,
+                        to="seekers.Human",
+                    ),
+                ),
+                ("birthdate", models.DateField(blank=True, null=True)),
+                ("sober_anniversary", models.DateField(blank=True, null=True)),
+                ("inactive_date", models.DateField(blank=True, null=True)),
+                ("facebook_username", models.CharField(blank=True, max_length=30)),
+                ("facebook_alias", models.CharField(blank=True, max_length=120)),
+                (
+                    "listener_trained",
+                    models.BooleanField(default=False, editable=False, verbose_name="Listener trained?"),
+                ),
+                ("extra_care", models.BooleanField(default=False, editable=False, verbose_name="Extra care program?")),
+                (
+                    "extra_care_graduate",
+                    models.BooleanField(default=False, editable=False, verbose_name="Extra care graduate?"),
+                ),
             ],
-            bases=('seekers.human',),
+            bases=("seekers.human",),
         ),
         migrations.AddField(
-            model_name='humannote',
-            name='human',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='seekers.Human'),
+            model_name="humannote",
+            name="human",
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="seekers.Human"),
         ),
-        migrations.AlterIndexTogether(
-            name='human',
-            index_together={('last_names', 'first_names')},
+        migrations.AlterIndexTogether(name="human", index_together={("last_names", "first_names")},),
+        migrations.AddField(
+            model_name="seekerpairing",
+            name="left",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, related_name="left_pair", to="seekers.Seeker"
+            ),
         ),
         migrations.AddField(
-            model_name='seekerpairing',
-            name='left',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='left_pair', to='seekers.Seeker'),
+            model_name="seekerpairing",
+            name="right",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, related_name="right_pair", to="seekers.Seeker"
+            ),
         ),
         migrations.AddField(
-            model_name='seekerpairing',
-            name='right',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='right_pair', to='seekers.Seeker'),
+            model_name="seekermilestone",
+            name="seeker",
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="seekers.Seeker"),
         ),
         migrations.AddField(
-            model_name='seekermilestone',
-            name='seeker',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='seekers.Seeker'),
-        ),
-        migrations.AddField(
-            model_name='seeker',
-            name='seeker_pairings',
-            field=models.ManyToManyField(through='seekers.SeekerPairing', to='seekers.Seeker'),
+            model_name="seeker",
+            name="seeker_pairings",
+            field=models.ManyToManyField(through="seekers.SeekerPairing", to="seekers.Seeker"),
         ),
     ]

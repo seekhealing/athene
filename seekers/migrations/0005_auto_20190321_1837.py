@@ -7,49 +7,38 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('seekers', '0004_seeker_transportation'),
+        ("seekers", "0004_seeker_transportation"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='SeekerBenefit',
+            name="SeekerBenefit",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('date', models.DateField()),
+                ("id", models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("date", models.DateField()),
             ],
-            options={
-                'ordering': ('-date',),
-            },
+            options={"ordering": ("-date",),},
         ),
         migrations.CreateModel(
-            name='SeekerBenefitType',
+            name="SeekerBenefitType",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=120)),
-                ('cost', models.DecimalField(decimal_places=2, max_digits=5)),
+                ("id", models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("name", models.CharField(max_length=120)),
+                ("cost", models.DecimalField(decimal_places=2, max_digits=5)),
             ],
-            options={
-                'ordering': ('name',),
-            },
+            options={"ordering": ("name",),},
         ),
         migrations.CreateModel(
-            name='SeekerBenefitProxy',
-            fields=[
-            ],
-            options={
-                'proxy': True,
-                'indexes': [],
-            },
-            bases=('seekers.seeker',),
+            name="SeekerBenefitProxy", fields=[], options={"proxy": True, "indexes": [],}, bases=("seekers.seeker",),
         ),
         migrations.AddField(
-            model_name='seekerbenefit',
-            name='benefit_type',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='seekers.SeekerBenefitType'),
+            model_name="seekerbenefit",
+            name="benefit_type",
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="seekers.SeekerBenefitType"),
         ),
         migrations.AddField(
-            model_name='seekerbenefit',
-            name='seeker',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='seekers.Seeker'),
+            model_name="seekerbenefit",
+            name="seeker",
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="seekers.Seeker"),
         ),
     ]
