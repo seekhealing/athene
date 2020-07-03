@@ -4,6 +4,7 @@ from decimal import Decimal
 import logging
 
 from django.contrib import admin
+from django.contrib import messages
 from django.conf import settings
 from django.db.models import Count, Sum, Avg, Q
 from django import forms
@@ -16,7 +17,8 @@ from django.utils.safestring import mark_safe
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_protect
 
-from . import models, mailchimp
+from . import constants, models, mailchimp, tasks
+from .forms import MassTextForm
 from events.admin import HumanCalendarSubscriptionAdmin
 
 
@@ -44,6 +46,36 @@ class MailchimpForm(forms.Form):
     tags = forms.MultipleChoiceField(
         choices=[(t, t) for t in settings.MAILCHIMP_TAGS], widget=forms.widgets.CheckboxSelectMultiple, required=False
     )
+
+
+def mass_text(modeladmin, request, queryset):
+    if request.POST.get("submitted"):
+        form_obj = MassTextForm(request.POST)
+        if form_obj.is_valid():
+            for human_obj in queryset:
+                tasks.send_message(
+                    human_obj.pk,
+                    human_obj.contact_preference,
+                    form_obj.cleaned_data.get(
+                        "sms_body" if human_obj.contact_preference == constants.SMS else "email_body"
+                    ),
+                    form_obj.cleaned_data.get("email_subject"),
+                )
+            modeladmin.message_user(request, f"Sent email/SMS to {len(queryset)} human(s).", messages.SUCCESS)
+            return None
+    else:
+        form_obj = MassTextForm()
+    context = dict(
+        form=form_obj,
+        queryset=queryset,
+        title=f"Send mass communication to {modeladmin.model._meta.verbose_name_plural}",
+        opts=modeladmin.model._meta,
+        media=modeladmin.media,
+    )
+    return TemplateResponse(request, "admin/seekers/mass_text.html", context)
+
+
+mass_text.short_description = "Send mass communications"
 
 
 class HumanAdminMixin(object):
@@ -103,6 +135,8 @@ class HumanAdminMixin(object):
                 if isinstance(instance, models.HumanNote):
                     instance.added_by = request.user
             instance.save()
+
+    actions = [mass_text]
 
 
 class FirstConversationFilter(admin.SimpleListFilter):
@@ -196,7 +230,7 @@ class HumanAdmin(HumanAdminMixin, admin.ModelAdmin):
 
     mark_as_community_partner.short_description = "Mark as Community Partner"
 
-    actions = ["enroll_as_seeker", "mark_as_community_partner"]
+    actions = HumanAdminMixin.actions + ["enroll_as_seeker", "mark_as_community_partner"]
 
 
 class IsActiveFilter(admin.SimpleListFilter):
@@ -371,7 +405,7 @@ class SeekerAdmin(HumanAdminMixin, admin.ModelAdmin):
 
     downgrade_to_prospect.short_description = "Downgrade to Prospect"
 
-    actions = ["downgrade_to_prospect"]
+    actions = HumanAdminMixin.actions + ["downgrade_to_prospect"]
 
 
 class IsActivePairingFilter(admin.SimpleListFilter):

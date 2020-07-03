@@ -13,7 +13,7 @@ pre-commit = "*"
 black = "*"
 
 [packages]
-django = "*"
+django = "<3"
 psycopg2 = "*"
 whitenoise = "*"
 django-localflavor = "*"
