@@ -252,10 +252,33 @@ class IsActiveFilter(admin.SimpleListFilter):
 class ServiceFilter(admin.SimpleListFilter):
     title = "Service offer"
     parameter_name = "service_offer"
-    service_fields = ["ride_share", "space_holder", "facilitator", "activity_buddy", "outreach"]
+    service_fields = [
+        "activity_buddy",
+        "connection_agent_organization",
+        "donations_getter",
+        "donor_thankyou_caller",
+        "donor_thankyou_writer",
+        "event_helper",
+        "facilitator",
+        "food_maker",
+        "listening_line",
+        "mediator",
+        "one_on_one_facilitator",
+        "outreach",
+        "ready_to_pair",
+        "ride_share",
+        "space_holder",
+        "street_team",
+    ]
+
+    def caps(self, field):
+        s = models.Seeker._meta.get_field(field).verbose_name
+        if s.lower() == s:
+            return s.capitalize()
+        return s
 
     def lookups(self, request, model_admin):
-        return [(f, f.replace("_", " ").capitalize()) for f in self.service_fields]
+        return [(f, self.caps(f)) for f in self.service_fields]
 
     def queryset(self, request, queryset):
         if self.value() in self.service_fields:
@@ -329,11 +352,14 @@ class SeekerAdmin(HumanAdminMixin, admin.ModelAdmin):
             "Service Opportunities",
             {
                 "fields": (
-                    ("ready_to_pair", "ride_share", "space_holder", "activity_buddy", "outreach"),
+                    ("activity_buddy", "donations_getter", "donor_thankyou_caller", "donor_thankyou_writer"),
+                    ("event_helper", "food_maker", "listening_line", "outreach"),
+                    ("ready_to_pair", "ride_share", "space_holder", "street_team"),
                     "connection_agent_organization",
                 ),
             },
         ),
+        ("Professional Services Offered", {"fields": (("facilitator", "mediator", "one_on_one_facilitator"),)}),
         ("Important dates", {"fields": (("birthdate", "sober_anniversary"), ("first_conversation", "enroll_date")),}),
         ("Record history", {"fields": (("created", "updated"), "inactive_date"),}),
     )
