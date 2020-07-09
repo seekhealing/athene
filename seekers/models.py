@@ -60,6 +60,8 @@ class Human(models.Model):
     contact_preference = models.IntegerField(choices=CONTACT_PREFERENCES, blank=True, null=True)
     first_conversation = models.DateField(blank=True, null=True)
 
+    send_replies_to_channel = models.CharField(max_length=120, editable=False, blank=True, default="")
+
     def __str__(self):
         return f"{self.first_names} {self.last_names}"
 

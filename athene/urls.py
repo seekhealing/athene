@@ -18,6 +18,8 @@ from django.contrib import admin
 from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import path, re_path, include
 
+from seekers import views
+
 robots_txt = HttpResponse("User-agent: *\nDisallow: /", content_type="text/plain")
 robots_txt["Cache-Control"] = "max-age=1209600"
 index = HttpResponseRedirect("https://seekhealing.org/")
@@ -26,6 +28,8 @@ index["Cache-Control"] = "max-age=1209600"
 urlpatterns = [
     path("admin/", admin.site.urls),
     re_path("^robots.txt$", lambda r: robots_txt),
+    path("webhooks/mailgun/", views.mailgun_webhook),
+    path("webhooks/twilio/", views.twilio_webhook),
     path("", lambda r: index),
 ]
 

@@ -33,6 +33,7 @@ mailchimp3 = "*"
 sentry-sdk = "*"
 celery = "*"
 redis = "*"
+twilio = "*"
 
 [requires]
 python_version = "3.7"
