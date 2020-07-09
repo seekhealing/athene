@@ -254,6 +254,8 @@ class ServiceFilter(admin.SimpleListFilter):
     parameter_name = "service_offer"
     service_fields = [
         "activity_buddy",
+        "admin_human",
+        "creative_human",
         "connection_agent_organization",
         "donations_getter",
         "donor_thankyou_caller",
@@ -336,7 +338,7 @@ class SeekerAdmin(HumanAdminMixin, admin.ModelAdmin):
                     ("first_names", "last_names"),
                     "street_address",
                     ("city", "state", "zip_code"),
-                    "seeker_pairs",
+                    ("seeker_pairs", "needs_connection"),
                     "transportation",
                     "listener_trained",
                     "extra_care",
@@ -352,9 +354,10 @@ class SeekerAdmin(HumanAdminMixin, admin.ModelAdmin):
             "Service Opportunities",
             {
                 "fields": (
-                    ("activity_buddy", "donations_getter", "donor_thankyou_caller", "donor_thankyou_writer"),
-                    ("event_helper", "food_maker", "listening_line", "outreach"),
-                    ("ready_to_pair", "ride_share", "space_holder", "street_team"),
+                    ("activity_buddy", "admin_human", "creative_human", "donations_getter"),
+                    ("donor_thankyou_caller", "donor_thankyou_writer", "event_helper", "food_maker"),
+                    ("listening_line", "outreach", "ready_to_pair", "ride_share"),
+                    ("space_holder", "street_team"),
                     "connection_agent_organization",
                 ),
             },
@@ -401,13 +404,19 @@ class SeekerAdmin(HumanAdminMixin, admin.ModelAdmin):
         IsActiveFilter,
         IsConnectionAgentFilter,
         PairingStatusFilter,
+        "needs_connection",
         ServiceFilter,
     ]
     search_fields = ["last_names", "first_names", "email", "phone_number"]
 
     def seeker_pairs(self, instance):
-        return mark_safe(
-            ", ".join(map(lambda sp: f'<a href="../../../seekerpairing/{sp[0]}/">{sp[1]}</a>', instance.seeker_pairs))
+        return (
+            mark_safe(
+                ", ".join(
+                    map(lambda sp: f'<a href="../../../seekerpairing/{sp[0]}/">{sp[1]}</a>', instance.seeker_pairs)
+                )
+            )
+            or "(Unpaired)"
         )
 
     def get_urls(self):

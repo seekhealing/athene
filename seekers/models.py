@@ -116,6 +116,7 @@ class Seeker(Human):
 
     enroll_date = models.DateField(blank=True, null=True)
     inactive_date = models.DateField(blank=True, null=True)
+    needs_connection = models.BooleanField(default=False)
 
     def is_active(self):
         return self.inactive_date is None
@@ -147,6 +148,8 @@ class Seeker(Human):
     activity_buddy = models.BooleanField(default=False, verbose_name="Connection Mission worthy")
     outreach = models.BooleanField(default=False, verbose_name="Listening Booth volunteer")
     ready_to_pair = models.BooleanField(default=False)
+    admin_human = models.BooleanField(default=False)
+    creative_human = models.BooleanField(default=False)
     connection_agent_organization = models.CharField(max_length=120, blank=True)
 
     def is_connection_agent(self):
