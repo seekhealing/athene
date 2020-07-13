@@ -28,7 +28,11 @@ SECRET_KEY = os.environ.get("SECRET_KEY", "0p3ns3s4m3!#")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = bool(os.environ.get("DEBUG", ""))
 
-ALLOWED_HOSTS = [] if DEBUG else ["seekers.seekhealing.org", "seekhealing-athene.herokuapp.com"]
+ALLOWED_HOSTS = (
+    []
+    if DEBUG
+    else ["seekers.seekhealing.org", "seekhealing-athene.herokuapp.com", "seekhealing-athene-staging.herokuapp.com"]
+)
 
 
 # Application definition
