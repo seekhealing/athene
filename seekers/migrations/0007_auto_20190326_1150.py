@@ -8,16 +8,26 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('seekers', '0006_auto_20190322_1046'),
+        ("seekers", "0006_auto_20190322_1046"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='CommunityPartner',
+            name="CommunityPartner",
             fields=[
-                ('human_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='seekers.Human')),
-                ('organization', models.CharField(blank=True, max_length=120)),
+                (
+                    "human_ptr",
+                    models.OneToOneField(
+                        auto_created=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        parent_link=True,
+                        primary_key=True,
+                        serialize=False,
+                        to="seekers.Human",
+                    ),
+                ),
+                ("organization", models.CharField(blank=True, max_length=120)),
             ],
-            bases=('seekers.human',),
+            bases=("seekers.human",),
         )
     ]

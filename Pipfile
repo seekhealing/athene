@@ -9,9 +9,11 @@ pylint-django = "*"
 rope = "*"
 django-debug-toolbar = "*"
 flake8 = "*"
+pre-commit = "*"
+black = "*"
 
 [packages]
-django = "*"
+django = "<3"
 psycopg2 = "*"
 whitenoise = "*"
 django-localflavor = "*"
@@ -29,6 +31,12 @@ django-ckeditor = "*"
 googlemaps = "*"
 mailchimp3 = "*"
 sentry-sdk = "*"
+celery = "*"
+redis = "*"
+twilio = "*"
 
 [requires]
 python_version = "3.7"
+
+[pipenv]
+allow_prereleases = true

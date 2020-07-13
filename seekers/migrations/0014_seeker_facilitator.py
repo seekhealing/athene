@@ -6,13 +6,9 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('seekers', '0013_human_first_conversation'),
+        ("seekers", "0013_human_first_conversation"),
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='seeker',
-            name='facilitator',
-            field=models.BooleanField(default=False),
-        ),
+        migrations.AddField(model_name="seeker", name="facilitator", field=models.BooleanField(default=False),),
     ]

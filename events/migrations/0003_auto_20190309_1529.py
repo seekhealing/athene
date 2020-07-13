@@ -6,17 +6,14 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('events', '0002_auto_20190307_2044'),
+        ("events", "0002_auto_20190307_2044"),
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='calendar',
-            name='send_autotext_time',
-        ),
+        migrations.RemoveField(model_name="calendar", name="send_autotext_time",),
         migrations.AddField(
-            model_name='calendar',
-            name='autotext_days_in_advance',
+            model_name="calendar",
+            name="autotext_days_in_advance",
             field=models.PositiveIntegerField(blank=True, null=True),
         ),
     ]

@@ -6,13 +6,9 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('seekers', '0014_seeker_facilitator'),
+        ("seekers", "0014_seeker_facilitator"),
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='seeker',
-            name='enroll_date',
-            field=models.DateField(blank=True, null=True),
-        ),
+        migrations.AddField(model_name="seeker", name="enroll_date", field=models.DateField(blank=True, null=True),),
     ]

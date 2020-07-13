@@ -1,6 +1,7 @@
 class EventsAdminSiteMixin(object):
     pass
 
+
 """
 import datetime
 
@@ -28,7 +29,7 @@ class EventsAdminSiteMixin(object):
             path('events/checkin/<calendar_id>/<event_id>/', self.checkin_event),
         ]
         return urls + base_urls
-    
+
     def checkin_list(self, request):
         calendar_objs = Calendar.objects.filter(inactive_date__isnull=True,
                                                 track_attendance=True)
@@ -55,8 +56,8 @@ class EventsAdminSiteMixin(object):
             self.each_context(request),
             upcoming_events=upcoming_events
         )
-        return TemplateResponse(request, "events/checkin_list.html", context)            
-    
+        return TemplateResponse(request, "events/checkin_list.html", context)
+
     def get_checkin_form(self):
         def callback(db_field, **kwargs):
             new_kwargs = kwargs.copy()
@@ -99,6 +100,3 @@ class EventsAdminSiteMixin(object):
         )
         return TemplateResponse(request, "events/checkin_form.html", context)
 """
-            
-
-    
