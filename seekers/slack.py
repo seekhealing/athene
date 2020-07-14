@@ -22,7 +22,7 @@ def send_message_to_channel(channel, basic_text, blocks, sync=False):
 
 
 def forward_mass_text_reply(human_obj, reply_text):
-    channel = human_obj.send_replies_to_channel or ("#general" if not settings.DEBUG else "#techstuff")
+    channel = human_obj.send_replies_to_channel or settings.DEFAULT_SLACK_CHANNEL
     basic_text = f"Reply received from {human_obj} to mass communications: {reply_text}"
     if human_obj.phone_number:
         formatted_phone_number = human_obj.phone_number.as_national
@@ -55,7 +55,7 @@ def forward_mass_text_reply(human_obj, reply_text):
 
 
 def forward_unknown_message(sender_id, message_text):
-    channel = "#general" if not settings.DEBUG else "#techstuff"
+    channel = settings.DEFAULT_SLACK_CHANNEL
     basic_text = f"Reply received from {sender_id} to mass communications: {message_text}"
     blocks = [
         dict(
