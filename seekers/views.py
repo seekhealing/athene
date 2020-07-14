@@ -66,16 +66,17 @@ def twilio_webhook(request):
     # Validate the request using its URL, POST data,
     # and X-TWILIO-SIGNATURE header
     request_valid = validator.validate(
-        f"https://{request.get_host()}/webhooks/twilio/", request.POST, request.META.get("HTTP_X_TWILIO_SIGNATURE", "")
+        request.build_absolute_uri(), request.POST, request.META.get("HTTP_X_TWILIO_SIGNATURE", "")
     )
 
     # Continue processing the request if it's valid, return a 403 error if
     # it's not
-    if not request_valid and not settings.DEBUG:
+    if not request_valid:
         logger.error(
-            f'Twilio signature failed: https://{request.get_host()}/webhooks/twilio/ + {request.POST} vs {request.META.get("HTTP_X_TWILIO_SIGNATURE")}'
+            f'Twilio signature failed: {request.build_absolute_uri()} + {request.POST} vs {request.META.get("HTTP_X_TWILIO_SIGNATURE")}'
         )
-        return HttpResponse(status=403, content="Signature verification failed")
+        if not (settings.DEBUG or settings.TWILIO_BYPASS_SIGNATURE):
+            return HttpResponse(status=403, content="Signature verification failed")
 
     resp = MessagingResponse()
 
