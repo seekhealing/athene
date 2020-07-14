@@ -41,6 +41,8 @@ def mailgun_webhook(request):
     if "<" in sender:
         match_obj = re.search(r".*<([^>]+)>", sender)
         sender_email = match_obj.group(1)
+    else:
+        sender_email = sender
     try:
         human_obj = Human.objects.get(email__iexact=sender_email)
     except Human.DoesNotExist:
@@ -70,6 +72,7 @@ def twilio_webhook(request):
     # Continue processing the request if it's valid, return a 403 error if
     # it's not
     if not request_valid and not settings.DEBUG:
+        logger.error(f'Twilio signature failed: {request.POST} vs {request.META.get("HTTP_X_TWILIO_SIGNATURE")}')
         return HttpResponse(status=403, content="Signature verification failed")
 
     resp = MessagingResponse()
