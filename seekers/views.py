@@ -22,7 +22,7 @@ TWILIO_AUTH_TOKEN = os.environ.get("TWILIO_AUTH_TOKEN")
 @http.require_POST
 @csrf.csrf_exempt
 def mailgun_webhook(request):
-    if not MAILGUN_SIGNING_KEY:
+    if not (MAILGUN_SIGNING_KEY or settings.MAILGUN_BYPASS_SIGNATURE):
         return HttpResponse(status=501, content="Webhook signing key not set.")
 
     # Verify signature
