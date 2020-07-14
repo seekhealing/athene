@@ -52,7 +52,12 @@ INSTALLED_APPS = [
     "events",
 ]
 if DEBUG:
-    INSTALLED_APPS.append("debug_toolbar")
+    try:
+        import debug_toolbar  # noqa
+    except ImportError:
+        pass
+    else:
+        INSTALLED_APPS.append("debug_toolbar")
 
 
 MIDDLEWARE = [
@@ -66,7 +71,12 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 if DEBUG:
-    MIDDLEWARE.append("debug_toolbar.middleware.DebugToolbarMiddleware",)
+    try:
+        import debug_toolbar  # noqa
+    except ImportError:
+        pass
+    else:
+        MIDDLEWARE.append("debug_toolbar.middleware.DebugToolbarMiddleware",)
 
 ROOT_URLCONF = "athene.urls"
 
