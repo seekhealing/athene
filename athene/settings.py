@@ -189,6 +189,7 @@ EMAIL_PORT = os.environ.get("MAILGUN_SMTP_PORT", "")
 EMAIL_HOST_USER = os.environ.get("MAILGUN_SMTP_LOGIN", "")
 EMAIL_HOST_PASSWORD = os.environ.get("MAILGUN_SMTP_PASSWORD", "")
 DEFAULT_FROM_EMAIL = "athene@seekers.seekhealing.org"
+MAILGUN_BYPASS_SIGNATURE = os.environ.get("MAILGUN_BYPASS_SIGNATURE")
 
 
 CELERY_BROKER_URL = os.environ.get("REDIS_URL", "redis://127.0.0.1:6379/1")

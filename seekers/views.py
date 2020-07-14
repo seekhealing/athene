@@ -34,7 +34,7 @@ def mailgun_webhook(request):
         ).hexdigest()
         assert hmac.compare_digest(str(request.POST["signature"]), str(hmac_digest))
     except (KeyError, AssertionError):
-        if not settings.DEBUG:
+        if (not settings.MAILGUN_BYPASS_SIGNATURE) or (not settings.DEBUG):
             return HttpResponse(status=400, content="Signature verification failed.")
 
     sender = request.POST["from"]
