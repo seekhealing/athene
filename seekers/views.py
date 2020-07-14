@@ -72,7 +72,9 @@ def twilio_webhook(request):
     # Continue processing the request if it's valid, return a 403 error if
     # it's not
     if not request_valid and not settings.DEBUG:
-        logger.error(f'Twilio signature failed: {request.POST} vs {request.META.get("HTTP_X_TWILIO_SIGNATURE")}')
+        logger.error(
+            f'Twilio signature failed: {request.build_absolute_uri()} + {request.POST} vs {request.META.get("HTTP_X_TWILIO_SIGNATURE")}'
+        )
         return HttpResponse(status=403, content="Signature verification failed")
 
     resp = MessagingResponse()
