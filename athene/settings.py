@@ -204,3 +204,6 @@ MAILGUN_BYPASS_SIGNATURE = os.environ.get("MAILGUN_BYPASS_SIGNATURE")
 
 CELERY_BROKER_URL = os.environ.get("REDIS_URL", "redis://127.0.0.1:6379/1")
 CELERY_RESULT_BACKEND = os.environ.get("REDIS_URL", "redis://127.0.0.1:6379/1")
+
+# This will properly set the URL scheme for absolute URIs
+SECURE_PROXY_SSL_HEADER = ("Cf-Visitor", '{"scheme":"https"}')
