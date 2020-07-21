@@ -1,6 +1,4 @@
 import logging
-import json
-import os
 
 from django.conf import settings
 
@@ -8,16 +6,16 @@ from . import tasks
 
 logger = logging.getLogger(__name__)
 
-WEBHOOK_MAP = json.loads(os.environ.get("SLACK_WEBHOOK_MAP", "{}"))
-
 
 def send_message_to_channel(channel, basic_text, blocks, sync=False):
     logger.info(f"Sending message to {channel}: {basic_text}")
     if sync:
-        tasks.async_request("POST", WEBHOOK_MAP[channel], json=dict(text=basic_text, blocks=blocks), retry_count=0)
+        tasks.async_request(
+            "POST", settings.SLACK_WEBHOOK_MAP[channel], json=dict(text=basic_text, blocks=blocks), retry_count=0
+        )
     else:
         tasks.async_request.delay(
-            "POST", WEBHOOK_MAP[channel], json=dict(text=basic_text, blocks=blocks), retry_count=0
+            "POST", settings.SLACK_WEBHOOK_MAP[channel], json=dict(text=basic_text, blocks=blocks), retry_count=0
         )
 
 

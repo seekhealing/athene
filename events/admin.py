@@ -35,7 +35,8 @@ def mass_text(modeladmin, request, queryset):
                     human_id,
                     contact_method,
                     form_obj.cleaned_data.get("sms_body" if contact_method == constants.SMS else "email_body"),
-                    form_obj.cleaned_data.get("email_subject"),
+                    form_obj.cleaned_data["email_subject"],
+                    form_obj.cleaned_data["reply_to_channel"],
                 )
             modeladmin.message_user(request, f"Sending email/SMS to {len(recipients)} human(s).", messages.SUCCESS)
             return None

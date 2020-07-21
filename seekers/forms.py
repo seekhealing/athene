@@ -1,3 +1,4 @@
+from django.conf import settings
 from django import forms
 
 
@@ -14,4 +15,10 @@ class MassTextForm(forms.Form):
         label="SMS body",
         help_text="For people who prefer SMS delivery.",
         widget=forms.Textarea(attrs=dict(rows=10, cols=120)),
+    )
+
+    reply_to_channel = forms.ChoiceField(
+        choices=[(channel, channel) for channel in settings.SLACK_WEBHOOK_MAP],
+        initial=settings.DEFAULT_SLACK_CHANNEL,
+        label="Send replies to",
     )

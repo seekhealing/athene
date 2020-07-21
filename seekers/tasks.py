@@ -14,7 +14,7 @@ logger = get_task_logger(__name__)
 
 
 @shared_task
-def send_message(human_id, contact_method, message, subject=None):
+def send_message(human_id, contact_method, message, subject=None, reply_to_channel=settings.DEFAULT_SLACK_CHANNEL):
     human_obj = Human.objects.get(id=human_id)
     if contact_method == EMAIL:
         if not human_obj.email:
@@ -26,6 +26,8 @@ def send_message(human_id, contact_method, message, subject=None):
             logger.warning(f"Tried sending message to {human_obj} via SMS but has no phone number")
             return
         twilio.sms.send_text(str(human_obj.phone_number), message)
+    human_obj.send_replies_to_channel = reply_to_channel
+    human_obj.save(force_update=True)
 
 
 @shared_task

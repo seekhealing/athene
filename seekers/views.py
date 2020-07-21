@@ -49,8 +49,6 @@ def mailgun_webhook(request):
         slack.forward_unknown_message(sender, request.POST["stripped-text"])
     else:
         slack.forward_mass_text_reply(human_obj, request.POST["stripped-text"])
-        human_obj.send_replies_to_channel = ""
-        human_obj.save()
 
     return HttpResponse(status=200, content="Message accepted.")
 
@@ -89,8 +87,6 @@ def twilio_webhook(request):
         slack.forward_unknown_message(localized_phone_number, request.POST["Body"])
     else:
         slack.forward_mass_text_reply(human_obj, request.POST["Body"])
-        human_obj.send_replies_to_channel = ""
-        human_obj.save()
 
     resp.message("Thank you for your reply! We have forwarded it on to our staff.")
 
