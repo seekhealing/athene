@@ -55,9 +55,66 @@ def mass_text(modeladmin, request, queryset):
 mass_text.short_description = "Send mass communication"
 
 
+class CalendarModelForm(forms.ModelForm):
+    class Meta:
+        model = models.Calendar
+        fields = "__all__"
+        widgets = {
+            "default_email_opening": forms.Textarea(attrs=dict(cols=80, rows=10, wrap="hard")),
+            "default_email_closing": forms.Textarea(attrs=dict(cols=80, rows=10, wrap="hard")),
+            "email_opening_override": forms.Textarea(attrs=dict(cols=80, rows=10, wrap="hard")),
+            "email_closing_override": forms.Textarea(attrs=dict(cols=80, rows=10, wrap="hard")),
+            "default_sms_opening": forms.Textarea(attrs=dict(cols=120, rows=10)),
+            "default_sms_closing": forms.Textarea(attrs=dict(cols=120, rows=10)),
+            "sms_opening_override": forms.Textarea(attrs=dict(cols=120, rows=10)),
+            "sms_closing_override": forms.Textarea(attrs=dict(cols=120, rows=10)),
+        }
+
+
 class CalendarAdmin(admin.ModelAdmin):
     model = models.Calendar
     actions = [mass_text]
+    form = CalendarModelForm
+    readonly_fields = ["name"]
+    fieldsets = (
+        (
+            None,
+            {
+                "fields": (
+                    "calendar_id",
+                    "name",
+                    "inactive_date",
+                    "track_attendance",
+                    "send_autotext_days",
+                    "autotext_days_in_advance",
+                ),
+            },
+        ),
+        (
+            "Default header/footer",
+            {
+                "fields": (
+                    "default_email_opening",
+                    "default_email_closing",
+                    "default_sms_opening",
+                    "default_sms_closing",
+                ),
+                "classes": ("monospace",),
+            },
+        ),
+        (
+            "Override header/footer",
+            {
+                "fields": (
+                    "email_opening_override",
+                    "email_closing_override",
+                    "sms_opening_override",
+                    "sms_closing_override",
+                ),
+                "classes": ("monospace",),
+            },
+        ),
+    )
 
 
 class CheckinModelForm(forms.ModelForm):

@@ -30,6 +30,42 @@ class Calendar(models.Model):
     track_attendance = models.BooleanField(default=False)
     send_autotext_days = MultiSelectField(choices=DAYS_OF_WEEK, blank=True)
     autotext_days_in_advance = models.PositiveIntegerField(null=True, blank=True)
+    default_email_opening = models.TextField(
+        blank=True, default="", help_text="Prepended to autotext emails - break lines at 80 columns"
+    )
+    email_opening_override = models.TextField(
+        blank=True,
+        default="",
+        help_text="One-time override to email opening - reset after next autotext - break lines at 80 columns",
+    )
+    default_sms_opening = models.TextField(
+        blank=True,
+        default="",
+        help_text="Prepended to autotext SMS - be efficient with content - do not break lines unnecessarily",
+    )
+    sms_opening_override = models.TextField(
+        blank=True,
+        default="",
+        help_text="One-time override to SMS opening - be efficient with content - do not break lines unnecessarily.",
+    )
+    default_email_closing = models.TextField(
+        blank=True, default="", help_text="Appended after autotext emails - break lines at 80 columns"
+    )
+    email_closing_override = models.TextField(
+        blank=True,
+        default="",
+        help_text="One-time override to email closing - reset after next autotext - break lines at 80 columns",
+    )
+    default_sms_closing = models.TextField(
+        blank=True,
+        default="",
+        help_text="Appended after autotext SMS - be efficient with content - do not break lines unnecessarily",
+    )
+    sms_closing_override = models.TextField(
+        blank=True,
+        default="",
+        help_text="One-time override to SMS closing - be efficient with content - do not break lines unnecessarily.",
+    )
 
     def __str__(self):
         return self.name

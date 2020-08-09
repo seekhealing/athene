@@ -21,8 +21,6 @@ class Command(BaseCommand):
         parser.add_argument(
             "--test-human", action="store", dest="test_human", help="Username of a user to send a test message to."
         )
-        parser.add_argument("--sms-opening", action="store")
-        parser.add_argument("--email-opening", action="store")
         parser.add_argument("--sms-only", action="store_true")
         parser.add_argument("--email-only", action="store_true")
 
@@ -85,9 +83,9 @@ class Command(BaseCommand):
                     contact_method__in=allowed_contact_methods
                 )
             for subscriber in subscribers:
-                subscriber.send_events_summary(
-                    normalized_events,
-                    extra_context=dict(
-                        sms_opening=options.get("sms_opening"), email_opening=options.get("email_opening")
-                    ),
-                )
+                subscriber.send_events_summary(normalized_events)
+            calendar_obj.email_opening_override = ""
+            calendar_obj.email_closing_override = ""
+            calendar_obj.sms_opening_override = ""
+            calendar_obj.sms_closing_override = ""
+            calendar_obj.save()
