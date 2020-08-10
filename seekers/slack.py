@@ -1,6 +1,7 @@
 import logging
 
 from django.conf import settings
+from django.urls import reverse
 
 from . import tasks, models
 
@@ -26,6 +27,12 @@ def forward_mass_text_reply(human_obj, reply_text):
         formatted_phone_number = human_obj.phone_number.as_national
     else:
         formatted_phone_number = "Unknown"
+    try:
+        human_obj.seeker
+    except models.Seeker.DoesNotExist:
+        athene_link = reverse("admin:seekers_human_change", args=(human_obj.pk,))
+    else:
+        athene_link = reverse("admin:seekers_seeker_change", args=(human_obj.pk,))
     blocks = [
         dict(
             type="section",
@@ -43,6 +50,7 @@ def forward_mass_text_reply(human_obj, reply_text):
                     f"From: {human_obj.first_names} {human_obj.last_names}\n\n"
                     f"Phone number: {formatted_phone_number}\n\n"
                     f'Email address: {human_obj.email if human_obj.email else "Unknown"}\n\n'
+                    f"Seeker profile: https://seekers.seehealing.org{athene_link}\n\n"
                     f"Message:\n\n"
                     f"```{reply_text}```"
                 ),
