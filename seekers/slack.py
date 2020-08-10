@@ -2,7 +2,7 @@ import logging
 
 from django.conf import settings
 
-from . import tasks
+from . import tasks, models
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +50,9 @@ def forward_mass_text_reply(human_obj, reply_text):
         ),
     ]
     send_message_to_channel(channel, basic_text, blocks)
+    models.HumanNote.objects.create(
+        human=human_obj, added_by=None, note=f"<p>Reply received by Athene:</p><pre>{reply_text}</pre>"
+    )
 
 
 def forward_unknown_message(sender_id, message_text):

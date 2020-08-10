@@ -265,7 +265,7 @@ class HumanNote(models.Model):
     added_by = models.ForeignKey("auth.User", on_delete=models.SET_NULL, editable=False, null=True)
     note = RichTextField()
 
-    STR_TEMPLATE = template.Template('{{ timestamp|date:"DATETIME_FORMAT" }} by {{ added_by }}')
+    STR_TEMPLATE = template.Template('{{ timestamp|date:"DATETIME_FORMAT" }} by {{ added_by|default:"Athene" }}')
 
     def __str__(self):
         return self.STR_TEMPLATE.render(template.Context(dict(timestamp=self.created, added_by=self.added_by)))

@@ -32,6 +32,7 @@ def mass_text(modeladmin, request, queryset):
             )
             for human_id, contact_method in recipients:
                 tasks.send_message.delay(
+                    request.user.id,
                     human_id,
                     contact_method,
                     form_obj.cleaned_data.get("sms_body" if contact_method == constants.SMS else "email_body"),

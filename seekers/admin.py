@@ -54,6 +54,7 @@ def mass_text(modeladmin, request, queryset):
         if form_obj.is_valid():
             for human_obj in queryset:
                 tasks.send_message.delay(
+                    request.user.id,
                     human_obj.pk,
                     human_obj.contact_preference,
                     form_obj.cleaned_data.get(

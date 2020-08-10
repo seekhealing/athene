@@ -128,7 +128,7 @@ class HumanCalendarSubscription(models.Model):
         content = template_obj.render(context)
         today = Template('{{ timestamp|date:"DATE_FORMAT" }}').render(Context(dict(timestamp=now())))
         email_subject = f"Upcoming {self.calendar.name} - {today}"
-        tasks.send_message.delay(self.human.id, self.contact_method, content, email_subject)
+        tasks.send_message.delay(None, self.human.id, self.contact_method, content, email_subject)
 
     class Meta:
         unique_together = [("human", "calendar")]
