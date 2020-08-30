@@ -50,7 +50,7 @@ def forward_mass_text_reply(human_obj, reply_text):
                     f"From: {human_obj.first_names} {human_obj.last_names}\n\n"
                     f"Phone number: {formatted_phone_number}\n\n"
                     f'Email address: {human_obj.email if human_obj.email else "Unknown"}\n\n'
-                    f"Seeker profile: https://seekers.seehealing.org{athene_link}\n\n"
+                    f"Seeker profile: https://seekers.seekhealing.org{athene_link}\n\n"
                     f"Message:\n\n"
                     f"```{reply_text}```"
                 ),
