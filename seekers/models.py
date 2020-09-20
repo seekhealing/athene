@@ -112,7 +112,9 @@ TRANSPORTATION_CHOICES = [
 ]
 
 
-class Seeker(Human):
+class Seeker(models.Model):
+
+    human = models.OneToOneField(Human, primary_key=True, db_column="human_ptr_id", on_delete=models.CASCADE)
 
     enroll_date = models.DateField(blank=True, null=True)
     inactive_date = models.DateField(blank=True, null=True)
@@ -316,5 +318,7 @@ class SeekerBenefitProxy(Seeker):
         verbose_name = "Seeker benefit report"
 
 
-class CommunityPartner(Human):
+class CommunityPartner(models.Model):
+    human = models.OneToOneField(Human, primary_key=True, db_column="human_ptr_id", on_delete=models.CASCADE)
+
     organization = models.CharField(max_length=120, blank=True)
