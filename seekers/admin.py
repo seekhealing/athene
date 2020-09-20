@@ -90,11 +90,15 @@ class FirstConversationFilter(admin.SimpleListFilter):
 
     def queryset(self, request, queryset):
         if self.value() == "future":
-            return queryset.filter(first_conversation__isnull=False, first_conversation__gte=timezone.now().date())
+            return queryset.filter(
+                seeker__isnull=True, first_conversation__isnull=False, first_conversation__gte=timezone.now().date()
+            )
         if self.value() == "past":
-            return queryset.filter(first_conversation__isnull=False, first_conversation__lte=timezone.now().date())
+            return queryset.filter(
+                seeker__isnull=True, first_conversation__isnull=False, first_conversation__lte=timezone.now().date()
+            )
         if self.value() == "null":
-            return queryset.filter(first_conversation__isnull=True)
+            return queryset.filter(seeker__isnull=True, first_conversation__isnull=True)
         return queryset
 
 
@@ -105,7 +109,9 @@ class HumanAdmin(admin.ModelAdmin):
     readonly_fields = ["show_id", "created", "updated"]
     list_display = ["first_names", "last_names", "email", "phone_number", "first_conversation", "created"]
     search_fields = ["last_names", "first_names", "email", "phone_number"]
-    actions = ["mass_text", "enroll_as_seeker", "mark_as_community_partner"]
+    actions = [
+        "mass_text",
+    ]
     fieldsets = [
         (
             None,
@@ -183,7 +189,13 @@ class HumanAdmin(admin.ModelAdmin):
         urlpatterns = [
             path(
                 "<path:object_id>/enroll/", self.admin_site.admin_view(self.enroll_seeker), name="seekers_human_enroll"
-            )
+            ),
+            path(
+                "<path:object_id>/partner/",
+                self.admin_site.admin_view(self.partner_with),
+                name="seekers_human_partner",
+            ),
+            path("<path:object_id>/ride/", self.admin_site.admin_view(self.find_a_ride), name="seekers_human_ride"),
         ] + urlpatterns
         return urlpatterns
 
@@ -192,6 +204,17 @@ class HumanAdmin(admin.ModelAdmin):
         _ = human.upgrade_to_seeker()
         self.message_user(request, f"{human} has been enrolled as a Seeker.")
         return HttpResponseRedirect(reverse("admin:seekers_seeker_change", args=(object_id,)))
+
+    def partner_with(self, request, object_id):
+        human = self.get_object(request, object_id)
+        _ = human.mark_as_community_partner()
+        self.message_user(request, f"{human} has been marked as a Community Partner.")
+        return HttpResponseRedirect(reverse("admin:seekers_communitypartner_change", args=(object_id,)))
+
+    def find_a_ride(self, request, object_id):
+        human = self.get_object(request, object_id)
+        context = dict(human=human, rides=human.find_ride(), is_popup=True)
+        return render(request, "admin/seekers/human/ride.html", context=context)
 
     def _get_obj_does_not_exist_redirect(self, request, opts, object_id):
         try:
@@ -207,22 +230,6 @@ class HumanAdmin(admin.ModelAdmin):
             shortened_fieldsets[0][1]["fields"] = [("first_names", "last_names"), ("city", "state")]
             return shortened_fieldsets
         return super().get_fieldsets(request, obj)
-
-    def enroll_as_seeker(self, request, queryset):
-        for obj in queryset:
-            logger.info(f"Upgrading {obj} from prospect to Seeker.")
-            obj.upgrade_to_seeker()
-        self.message_user(request, f"{len(queryset)} prospect(s) enrolled as Seekers.")
-
-    enroll_as_seeker.short_description = "Enroll as Seeker"
-
-    def mark_as_community_partner(self, request, queryset):
-        for obj in queryset:
-            logger.info(f"Migrating {obj} from prospect to Community Partner.")
-            obj.mark_as_community_partner()
-        self.message_user(request, f"{len(queryset)} prospect(s) marked as Community Partners.")
-
-    mark_as_community_partner.short_description = "Mark as Community Partner"
 
 
 class IsActiveFilter(admin.SimpleListFilter):
@@ -399,28 +406,7 @@ class SeekerAdmin(admin.ModelAdmin):
             or "(Unpaired)"
         )
 
-    def get_urls(self):
-        from django.urls import path
-
-        urlpatterns = super().get_urls()
-        urlpatterns = [
-            path("<path:object_id>/ride/", self.admin_site.admin_view(self.find_a_ride), name="seekers_seeker_ride")
-        ] + urlpatterns
-        return urlpatterns
-
-    def find_a_ride(self, request, object_id):
-        seeker = self.get_object(request, object_id)
-        context = dict(seeker=seeker, rides=seeker.find_ride(), is_popup=True)
-        return render(request, "admin/seekers/seeker/ride.html", context=context)
-
-    def downgrade_to_prospect(self, request, queryset):
-        for seeker in queryset:
-            seeker.delete(keep_parents=True)
-        self.message_user(request, f"{len(queryset)} seeker(s) downgraded to Prospects.")
-
-    downgrade_to_prospect.short_description = "Downgrade to Prospect"
-
-    actions = ["mass_text", "downgrade_to_prospect"]
+    actions = ["mass_text"]
 
 
 class IsActivePairingFilter(admin.SimpleListFilter):

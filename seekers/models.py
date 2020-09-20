@@ -69,12 +69,7 @@ class Human(models.Model):
         return f"{self.first_names} {self.last_names}"
 
     def upgrade_to_seeker(self):
-        seeker = Seeker(
-            human_ptr=self,
-            enroll_date=timezone.now().date(),
-            **{field.name: getattr(self, field.name) for field in type(self)._meta.fields},
-        )
-        seeker.save()
+        seeker = Seeker.objects.create(human=self, enroll_date=timezone.now().date(),)
         if self.email:
             status = mailchimp.client.subscription_status(self.email)
             if status["status"] == "subscribed":
@@ -86,10 +81,7 @@ class Human(models.Model):
         return seeker
 
     def mark_as_community_partner(self):
-        community_partner = CommunityPartner(
-            human_ptr=self, **{field.name: getattr(self, field.name) for field in type(self)._meta.fields}
-        )
-        community_partner.save()
+        community_partner = CommunityPartner.objects.create(human=self)
         return community_partner
 
     def _get_unique_checks(self, exclude=None):
@@ -101,6 +93,27 @@ class Human(models.Model):
         if self.phone_number:
             unique_checks.append((self.__class__, ("phone_number",)))
         return unique_checks, date_checks
+
+    def find_ride(self):
+        if not settings.GOOGLEMAPS_API:
+            return []
+        client = googlemaps.Client(key=settings.GOOGLEMAPS_API)
+        ride_volunteers = Seeker.objects.filter(
+            Q(ride_share=True) | Q(transportation=1), inactive_date__isnull=True, human__street_address__gt=""
+        ).exclude(pk=self.id)
+        result_rows = []
+        for chunk in [ride_volunteers[i : i + 25] for i in range(0, len(ride_volunteers), 25)]:  # noqa: E203
+            result = client.distance_matrix(
+                origins=f"{self.street_address}, {self.zip_code}",
+                destinations=[f"{obj.human.street_address}, {obj.human.zip_code}" for obj in ride_volunteers],
+                mode="driving",
+                units="imperial",
+            )
+            result_rows += result["rows"][0]["elements"]
+        result_map = zip(ride_volunteers, result_rows)
+        result_map = list(filter(lambda result: result[1]["status"] == "OK", result_map))
+        result_map.sort(key=lambda result: result[1]["duration"]["value"])
+        return [(result[0], result[1]) for result in result_map[:10]]
 
     class Meta:
         verbose_name = "Human"
@@ -209,31 +222,6 @@ class Seeker(HumanMixin, models.Model):
             else:
                 pairs.append((pairing.id, pairing.left))
         return pairs
-
-    def find_ride(self):
-        if not settings.GOOGLEMAPS_API:
-            return []
-        client = googlemaps.Client(key=settings.GOOGLEMAPS_API)
-        ride_volunteers = (
-            type(self)
-            .objects.filter(
-                Q(ride_share=True) | Q(transportation=1), inactive_date__isnull=True, street_address__gt=""
-            )
-            .exclude(pk=self.id)
-        )
-        result_rows = []
-        for chunk in [ride_volunteers[i : i + 25] for i in range(0, len(ride_volunteers), 25)]:  # noqa: E203
-            result = client.distance_matrix(
-                origins=f"{self.street_address}, {self.zip_code}",
-                destinations=[f"{obj.street_address}, {obj.zip_code}" for obj in ride_volunteers],
-                mode="driving",
-                units="imperial",
-            )
-            result_rows += result["rows"][0]["elements"]
-        result_map = zip(ride_volunteers, result_rows)
-        result_map = list(filter(lambda result: result[1]["status"] == "OK", result_map))
-        result_map.sort(key=lambda result: result[1]["duration"]["value"])
-        return [(result[0], result[1]) for result in result_map]
 
 
 def today():

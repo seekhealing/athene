@@ -4,7 +4,7 @@
 
 <div class="module">
 <table>
-    <caption>Find a ride for {{ seeker }}</caption>
+    <caption>Find a ride for {{ human }}</caption>
     <tr>
       <th scope="col">Seeker</th>
       <th scope="col">Address</th>
@@ -14,7 +14,7 @@
     </tr>
     {% for seeker, distance in rides %}
     <tr>
-      <td><a href="{% url 'admin:seekers_seeker_change' seeker.pk %}">{{ seeker }}</a></td>
+      <td><a href="{% url 'admin:seekers_human_change' seeker.pk %}">{{ seeker }}</a></td>
       <td>{{ seeker.street_address }}, {{ seeker.zip_code }}</td>
       <td>{{ distance.distance.text }}, {{ distance.duration.text }}</td>
       <td><img src="{% if seeker.transportation == 1 %}{% static 'admin/img/icon-yes.svg'%}{% else %}{% static 'admin/img/icon-no.svg'%}{% endif %}"></td>

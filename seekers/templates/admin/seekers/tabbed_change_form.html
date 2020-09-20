@@ -32,6 +32,11 @@
 {% if change %}{% if not is_popup %}
   <ul class="object-tools">
     {% block object-tools-items %}
+      {% if not original.human.seeker %}<li><a href="{% url "admin:seekers_human_enroll" object_id=original.pk %}">Enroll seeker</a></li>{% endif %}
+      {% if not original.human.communitypartner %}<li><a href="{% url "admin:seekers_human_partner" object_id=original.pk %}">Mark as community partner</a></li>{% endif %}
+      {% if original.human.street_address %}
+        <li><a href="{% url "admin:seekers_human_ride" object_id %}" class="related-widget-wrapper-link">Find a Ride</a></li>
+      {% endif %}
       {% change_form_object_tools %}
     {% endblock %}
   </ul>
@@ -48,7 +53,7 @@
     </p>
     {{ adminform.form.non_field_errors }}
 {% endif %}
-
+{% if not is_popup %}
 <div class="ui-tabs ui-corner-all ui-widget ui-widget-content">
 <ul role="tablist" class="ui-tabs-nav ui-corner-all ui-helper-reset ui-helper-clearfix ui-widget-header">
   <li role="tab" class="ui-tabs-tab ui-corner-top ui-state-default ui-tab {% if opts.model_name == "human" %}ui-tabs-active ui-state-active{% endif %}"><a href="{% if opts.model_name == "human" %}#{% else %}{% url "admin:seekers_human_change" original.pk %}{% endif %}">Basic info</a></li>
@@ -60,6 +65,7 @@
   {% endif %}
 </ul>
 <div id="active-tab" role="tabpanel" class="ui-tabs-panel ui-corner-bottom ui-widget-content">
+{% endif %}
 {% block field_sets %}
 {% for fieldset in adminform %}
   {% include "admin/includes/fieldset.html" %}
@@ -75,7 +81,10 @@
 {% endblock %}
 
 {% block after_related_objects %}{% endblock %}
+{% if not is_popup %}
 </div>
+</div>
+{% endif %}
 {% block submit_buttons_bottom %}{% submit_row %}{% endblock %}
 
 {% block admin_change_form_document_ready %}
