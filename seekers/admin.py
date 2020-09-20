@@ -53,6 +53,7 @@ def mass_text(modeladmin, request, queryset):
         form_obj = MassTextForm(request.POST)
         if form_obj.is_valid():
             for human_obj in queryset:
+                human_obj = human_obj.human
                 tasks.send_message.delay(
                     request.user.id,
                     human_obj.pk,
@@ -80,7 +81,41 @@ def mass_text(modeladmin, request, queryset):
 mass_text.short_description = "Send mass communications"
 
 
-class HumanAdminMixin(object):
+class FirstConversationFilter(admin.SimpleListFilter):
+    title = "First conversation scheduled"
+    parameter_name = "first_conv"
+
+    def lookups(self, request, model_admin):
+        return (("future", "Scheduled"), ("past", "Already occurred"), ("null", "Needs scheduling"))
+
+    def queryset(self, request, queryset):
+        if self.value() == "future":
+            return queryset.filter(first_conversation__isnull=False, first_conversation__gte=timezone.now().date())
+        if self.value() == "past":
+            return queryset.filter(first_conversation__isnull=False, first_conversation__lte=timezone.now().date())
+        if self.value() == "null":
+            return queryset.filter(first_conversation__isnull=True)
+        return queryset
+
+
+class HumanAdmin(admin.ModelAdmin):
+    inlines = [HumanNoteAdmin, HumanCalendarSubscriptionAdmin]
+    model = models.Human
+    list_filter = [FirstConversationFilter]
+    readonly_fields = ["show_id", "created", "updated"]
+    list_display = ["first_names", "last_names", "email", "phone_number", "first_conversation", "created"]
+    search_fields = ["last_names", "first_names", "email", "phone_number"]
+    actions = ["mass_text", "enroll_as_seeker", "mark_as_community_partner"]
+    fieldsets = [
+        (
+            None,
+            {"fields": ["show_id", ("first_names", "last_names"), "street_address", ("city", "state", "zip_code")],},
+        ),
+        ("Contact information", {"fields": (("email", "phone_number"), "contact_preference")}),
+        ("Important dates", {"fields": (("birthdate", "sober_anniversary"), "first_conversation"),}),
+        ("Record history", {"fields": (("created", "updated"),),}),
+    ]
+
     def save_model(self, request, obj, form, change):
         to_return = super().save_model(request, obj, form, change)
         if not change and obj.email:
@@ -138,31 +173,6 @@ class HumanAdminMixin(object):
                     instance.added_by = request.user
             instance.save()
 
-    actions = [mass_text]
-
-
-class FirstConversationFilter(admin.SimpleListFilter):
-    title = "First conversation scheduled"
-    parameter_name = "first_conv"
-
-    def lookups(self, request, model_admin):
-        return (("future", "Scheduled"), ("past", "Already occurred"), ("null", "Needs scheduling"))
-
-    def queryset(self, request, queryset):
-        if self.value() == "future":
-            return queryset.filter(first_conversation__isnull=False, first_conversation__gte=timezone.now().date())
-        if self.value() == "past":
-            return queryset.filter(first_conversation__isnull=False, first_conversation__lte=timezone.now().date())
-        if self.value() == "null":
-            return queryset.filter(first_conversation__isnull=True)
-        return queryset
-
-
-class HumanAdmin(HumanAdminMixin, admin.ModelAdmin):
-    inlines = [HumanNoteAdmin, HumanCalendarSubscriptionAdmin]
-    model = models.Human
-    list_filter = [FirstConversationFilter]
-
     def get_urls(self):
         from django.urls import path
 
@@ -187,16 +197,6 @@ class HumanAdmin(HumanAdminMixin, admin.ModelAdmin):
         else:
             return qs.filter(seeker__isnull=True, communitypartner__isnull=True)
 
-    fieldsets = [
-        (
-            None,
-            {"fields": ["show_id", ("first_names", "last_names"), "street_address", ("city", "state", "zip_code")],},
-        ),
-        ("Contact information", {"fields": (("email", "phone_number"), "contact_preference")}),
-        ("Important dates", {"fields": (("birthdate", "sober_anniversary"), "first_conversation"),}),
-        ("Record history", {"fields": (("created", "updated"),),}),
-    ]
-
     def _get_obj_does_not_exist_redirect(self, request, opts, object_id):
         try:
             _ = models.Seeker.objects.get(pk=object_id)
@@ -211,10 +211,6 @@ class HumanAdmin(HumanAdminMixin, admin.ModelAdmin):
             shortened_fieldsets[0][1]["fields"] = [("first_names", "last_names"), ("city", "state")]
             return shortened_fieldsets
         return super().get_fieldsets(request, obj)
-
-    readonly_fields = ["show_id", "created", "updated"]
-    list_display = ["first_names", "last_names", "email", "phone_number", "first_conversation", "created"]
-    search_fields = ["last_names", "first_names", "email", "phone_number"]
 
     def enroll_as_seeker(self, request, queryset):
         for obj in queryset:
@@ -231,8 +227,6 @@ class HumanAdmin(HumanAdminMixin, admin.ModelAdmin):
         self.message_user(request, f"{len(queryset)} prospect(s) marked as Community Partners.")
 
     mark_as_community_partner.short_description = "Mark as Community Partner"
-
-    actions = HumanAdminMixin.actions + ["enroll_as_seeker", "mark_as_community_partner"]
 
 
 class IsActiveFilter(admin.SimpleListFilter):
@@ -319,16 +313,16 @@ class PairingStatusFilter(admin.SimpleListFilter):
         )
         if self.value() == "p":
             return queryset.filter(paired_filter).distinct()
-        paired_seekers = models.Seeker.objects.filter(paired_filter).values_list("id", flat=True)
+        paired_seekers = models.Seeker.objects.filter(paired_filter).values_list("human_id", flat=True)
         if self.value() == "u_r":
-            return queryset.filter(ready_to_pair=True).exclude(id__in=paired_seekers).distinct()
+            return queryset.filter(ready_to_pair=True).exclude(human_id__in=paired_seekers).distinct()
         if self.value() == "u_u":
-            return queryset.filter(ready_to_pair=False).exclude(id__in=paired_seekers).distinct()
+            return queryset.filter(ready_to_pair=False).exclude(human_id__in=paired_seekers).distinct()
         return queryset
 
 
-class SeekerAdmin(HumanAdminMixin, admin.ModelAdmin):
-    inlines = [HumanNoteAdmin, SeekerMilestoneAdmin, HumanCalendarSubscriptionAdmin]
+class SeekerAdmin(admin.ModelAdmin):
+    inlines = [SeekerMilestoneAdmin]
 
     model = models.Seeker
     fieldsets = (
@@ -336,10 +330,6 @@ class SeekerAdmin(HumanAdminMixin, admin.ModelAdmin):
             None,
             {
                 "fields": [
-                    "show_id",
-                    ("first_names", "last_names"),
-                    "street_address",
-                    ("city", "state", "zip_code"),
                     ("seeker_pairs", "needs_connection"),
                     "transportation",
                     "listener_trained",
@@ -348,10 +338,7 @@ class SeekerAdmin(HumanAdminMixin, admin.ModelAdmin):
                 ],
             },
         ),
-        (
-            "Contact information",
-            {"fields": (("email", "phone_number"), ("facebook_username", "facebook_alias"), "contact_preference")},
-        ),
+        ("Contact information", {"fields": (("facebook_username", "facebook_alias"),)},),
         (
             "Service Opportunities",
             {
@@ -365,8 +352,7 @@ class SeekerAdmin(HumanAdminMixin, admin.ModelAdmin):
             },
         ),
         ("Professional Services Offered", {"fields": (("facilitator", "mediator", "one_on_one_facilitator"),)}),
-        ("Important dates", {"fields": (("birthdate", "sober_anniversary"), ("first_conversation", "enroll_date")),}),
-        ("Record history", {"fields": (("created", "updated"), "inactive_date"),}),
+        ("Important dates", {"fields": (("enroll_date", "inactive_date",)),}),
     )
 
     def get_fieldsets(self, request, obj=None):
@@ -378,13 +364,10 @@ class SeekerAdmin(HumanAdminMixin, admin.ModelAdmin):
         return super().get_fieldsets(request, obj)
 
     readonly_fields = [
-        "show_id",
         "seeker_pairs",
         "listener_trained",
         "extra_care",
         "extra_care_graduate",
-        "created",
-        "updated",
     ]
     list_display = [
         "first_names",
@@ -409,7 +392,7 @@ class SeekerAdmin(HumanAdminMixin, admin.ModelAdmin):
         "needs_connection",
         ServiceFilter,
     ]
-    search_fields = ["last_names", "first_names", "email", "phone_number"]
+    search_fields = ["human__last_names", "human__first_names", "human__email", "human__phone_number"]
 
     def seeker_pairs(self, instance):
         return (
@@ -442,7 +425,7 @@ class SeekerAdmin(HumanAdminMixin, admin.ModelAdmin):
 
     downgrade_to_prospect.short_description = "Downgrade to Prospect"
 
-    actions = HumanAdminMixin.actions + ["downgrade_to_prospect"]
+    actions = ["mass_text", "downgrade_to_prospect"]
 
 
 class IsActivePairingFilter(admin.SimpleListFilter):
@@ -540,16 +523,10 @@ class SeekerBenefitTypeAdmin(admin.ModelAdmin):
     search_fields = ["name"]
 
 
-class CommunityPartnerAdmin(HumanAdminMixin, admin.ModelAdmin):
+class CommunityPartnerAdmin(admin.ModelAdmin):
     model = models.CommunityPartner
-    inlines = [HumanNoteAdmin, HumanCalendarSubscriptionAdmin]
 
-    fieldsets = (
-        (None, {"fields": ["show_id", ("first_names", "last_names"), ("city", "state"), "organization"],}),
-        ("Contact information", {"fields": (("email", "phone_number"), "contact_preference")}),
-        ("Record history", {"fields": (("created", "updated"),),}),
-    )
-    readonly_fields = ["show_id", "created", "updated"]
+    fieldsets = ((None, {"fields": ["organization"],}),)
     list_display = ["first_names", "last_names", "email", "phone_number"]
 
 

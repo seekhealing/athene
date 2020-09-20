@@ -41,6 +41,7 @@ CONTACT_PREFERENCES = [
 
 class Human(models.Model):
     id = models.CharField(max_length=4, primary_key=True, default=id_gen, editable=False)
+    human = property(lambda self: self)
     first_names = models.CharField(max_length=120)
     last_names = models.CharField(max_length=120)
     email = models.EmailField(
@@ -100,9 +101,39 @@ class Human(models.Model):
         return unique_checks, date_checks
 
     class Meta:
-        verbose_name = "Prospect"
+        verbose_name = "Human"
         ordering = ["first_names", "last_names"]
         index_together = [("last_names", "first_names")]
+
+
+class HumanMixin:
+    def first_names(self):
+        return self.human.first_names
+
+    first_names.short_description = "First names"
+    first_names.admin_order_field = "human__first_names"
+
+    def last_names(self):
+        return self.human.last_names
+
+    last_names.short_description = "Last names"
+    last_names.admin_order_field = "human__last_names"
+
+    def email(self):
+        return self.human.email
+
+    email.short_description = "Email address"
+    email.admin_order_field = "human__email"
+
+    def phone_number(self):
+        return self.human.phone_number
+
+    phone_number.short_description = "Phone number"
+    phone_number.admin_order_field = "human__phone_number"
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.human.save(update_fields=["updated"])
 
 
 TRANSPORTATION_CHOICES = [
@@ -112,9 +143,9 @@ TRANSPORTATION_CHOICES = [
 ]
 
 
-class Seeker(models.Model):
+class Seeker(HumanMixin, models.Model):
 
-    human = models.OneToOneField(Human, primary_key=True, db_column="human_ptr_id", on_delete=models.CASCADE)
+    human = models.OneToOneField(Human, primary_key=True, on_delete=models.CASCADE)
 
     enroll_date = models.DateField(blank=True, null=True)
     inactive_date = models.DateField(blank=True, null=True)
@@ -318,7 +349,7 @@ class SeekerBenefitProxy(Seeker):
         verbose_name = "Seeker benefit report"
 
 
-class CommunityPartner(models.Model):
-    human = models.OneToOneField(Human, primary_key=True, db_column="human_ptr_id", on_delete=models.CASCADE)
+class CommunityPartner(HumanMixin, models.Model):
+    human = models.OneToOneField(Human, primary_key=True, on_delete=models.CASCADE)
 
     organization = models.CharField(max_length=120, blank=True)
