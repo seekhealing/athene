@@ -111,7 +111,10 @@ class HumanAdmin(admin.ModelAdmin):
             None,
             {"fields": ["show_id", ("first_names", "last_names"), "street_address", ("city", "state", "zip_code")],},
         ),
-        ("Contact information", {"fields": (("email", "phone_number"), "contact_preference")}),
+        (
+            "Contact information",
+            {"fields": (("email", "phone_number"), ("facebook_username", "facebook_alias"), "contact_preference")},
+        ),
         ("Important dates", {"fields": (("birthdate", "sober_anniversary"), "first_conversation"),}),
         ("Record history", {"fields": (("created", "updated"),),}),
     ]
@@ -331,7 +334,6 @@ class SeekerAdmin(admin.ModelAdmin):
                 ],
             },
         ),
-        ("Contact information", {"fields": (("facebook_username", "facebook_alias"),)},),
         (
             "Service Opportunities",
             {

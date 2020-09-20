@@ -50,6 +50,8 @@ class Human(models.Model):
     phone_number = PhoneNumberField(
         blank=True, error_messages=dict(unique="A person with this phone number is already in the system.")
     )
+    facebook_username = models.CharField(max_length=30, blank=True)
+    facebook_alias = models.CharField(max_length=120, blank=True)
     birthdate = models.DateField(blank=True, null=True)
     sober_anniversary = models.DateField(blank=True, null=True)
     street_address = models.CharField(max_length=120, blank=True)
@@ -161,9 +163,6 @@ class Seeker(HumanMixin, models.Model):
     is_active.short_description = "Active"
 
     seeker_pairings = models.ManyToManyField("self", through="SeekerPairing", symmetrical=False)
-
-    facebook_username = models.CharField(max_length=30, blank=True)
-    facebook_alias = models.CharField(max_length=120, blank=True)
 
     listener_trained = models.BooleanField("Listener trained", editable=False, default=False)
     extra_care = models.BooleanField("Extra care program", editable=False, default=False)

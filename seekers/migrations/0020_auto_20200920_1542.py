@@ -17,31 +17,49 @@ class Migration(migrations.Migration):
                 migrations.RenameField(model_name="seeker", old_name="human_ptr", new_name="human"),
             ],
             state_operations=[
-                migrations.RemoveField(model_name="communitypartner", name="human_ptr",),
-                migrations.RemoveField(model_name="seeker", name="human_ptr",),
-                migrations.AddField(
-                    model_name="communitypartner",
-                    name="human",
-                    field=models.OneToOneField(
-                        default="abcd",
-                        on_delete=django.db.models.deletion.CASCADE,
-                        primary_key=True,
-                        serialize=False,
-                        to="seekers.human",
-                    ),
-                    preserve_default=False,
+                migrations.DeleteModel("seeker"),
+                migrations.DeleteModel("communitypartner"),
+                migrations.CreateModel(
+                    name="Seeker",
+                    fields=[
+                        (
+                            "human",
+                            models.OneToOneField(
+                                on_delete=django.db.models.deletion.CASCADE, primary_key=True, to="seekers.Human",
+                            ),
+                        ),
+                        ("birthdate", models.DateField(blank=True, null=True)),
+                        ("sober_anniversary", models.DateField(blank=True, null=True)),
+                        ("inactive_date", models.DateField(blank=True, null=True)),
+                        ("facebook_username", models.CharField(blank=True, max_length=30)),
+                        ("facebook_alias", models.CharField(blank=True, max_length=120)),
+                        (
+                            "listener_trained",
+                            models.BooleanField(default=False, editable=False, verbose_name="Listener trained?"),
+                        ),
+                        (
+                            "extra_care",
+                            models.BooleanField(default=False, editable=False, verbose_name="Extra care program?"),
+                        ),
+                        (
+                            "extra_care_graduate",
+                            models.BooleanField(default=False, editable=False, verbose_name="Extra care graduate?"),
+                        ),
+                    ],
+                    bases=(),
                 ),
-                migrations.AddField(
-                    model_name="seeker",
-                    name="human",
-                    field=models.OneToOneField(
-                        default="abcd",
-                        on_delete=django.db.models.deletion.CASCADE,
-                        primary_key=True,
-                        serialize=False,
-                        to="seekers.human",
-                    ),
-                    preserve_default=False,
+                migrations.CreateModel(
+                    name="CommunityPartner",
+                    fields=[
+                        (
+                            "human_ptr",
+                            models.OneToOneField(
+                                on_delete=django.db.models.deletion.CASCADE, primary_key=True, to="seekers.Human",
+                            ),
+                        ),
+                        ("organization", models.CharField(blank=True, max_length=120)),
+                    ],
+                    bases=(),
                 ),
             ],
         )
