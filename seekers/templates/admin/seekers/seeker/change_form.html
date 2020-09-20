@@ -1,4 +1,4 @@
-{% extends "admin/change_form.html" %}
+{% extends "admin/seekers/tabbed_change_form.html" %}
 {% load static %}
 
 {% block object-tools-items %}
@@ -11,6 +11,34 @@
 {{ block.super }}
 {% endblock %}
 
-{% block after_field_sets %}
-{% include "admin/seekers/includes/mailchimp.html"%}
+{% block field_sets %}
+<fieldset class="module aligned">
+  <div class="form-row">
+    <div class="fieldBox">
+      <label>Identifier:</label>
+      <div class="readonly">{{ original.pk }}</div>
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="fieldBox">
+      <label>First names:</label>
+      <div class="readonly" style="min-width: 260px">{{ original.first_names }}</div>
+    </div>
+    <div class="fieldBox">
+      <label>Last names:</label>
+      <div class="readonly" style="min-width: 260px">{{ original.last_names }}</div>
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="fieldBox">
+      <label>Phone number:</label>
+      <div class="readonly" style="min-width: 260px">{{ original.phone_number }}</div>
+    </div>
+    <div class="fieldBox">
+      <label>Email address:</label>
+      <div class="readonly" style="min-width: 260px">{{ original.email_address }}</div>
+    </div>
+  </div>
+</fieldset>
+{{ block.super }}
 {% endblock %}

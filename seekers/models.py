@@ -135,6 +135,9 @@ class HumanMixin:
         super().save(*args, **kwargs)
         self.human.save(update_fields=["updated"])
 
+    def __str__(self):
+        return str(self.human)
+
 
 TRANSPORTATION_CHOICES = [
     (1, "Has a car"),

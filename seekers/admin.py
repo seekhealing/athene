@@ -190,13 +190,6 @@ class HumanAdmin(admin.ModelAdmin):
         self.message_user(request, f"{human} has been enrolled as a Seeker.")
         return HttpResponseRedirect(reverse("admin:seekers_seeker_change", args=(object_id,)))
 
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        if request.path.endswith("/autocomplete/"):
-            return qs
-        else:
-            return qs.filter(seeker__isnull=True, communitypartner__isnull=True)
-
     def _get_obj_does_not_exist_redirect(self, request, opts, object_id):
         try:
             _ = models.Seeker.objects.get(pk=object_id)
@@ -327,7 +320,7 @@ class SeekerAdmin(admin.ModelAdmin):
     model = models.Seeker
     fieldsets = (
         (
-            None,
+            "Seeker Details",
             {
                 "fields": [
                     ("seeker_pairs", "needs_connection"),
@@ -526,7 +519,7 @@ class SeekerBenefitTypeAdmin(admin.ModelAdmin):
 class CommunityPartnerAdmin(admin.ModelAdmin):
     model = models.CommunityPartner
 
-    fieldsets = ((None, {"fields": ["organization"],}),)
+    fieldsets = (("Partner details", {"fields": ["organization"],}),)
     list_display = ["first_names", "last_names", "email", "phone_number"]
 
 
