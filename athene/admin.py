@@ -5,7 +5,7 @@ from events.admin_site import EventsAdminSiteMixin
 
 
 class AtheneAdminSite(SeekersAdminSiteMixin, EventsAdminSiteMixin, admin.AdminSite):
-    site_header = "SeekHealing"
+    site_header = "SeekHealing - Athene"
     site_title = "SeekHealing Seekers Database"
     site_url = None
     index_title = "Seekers Database"
