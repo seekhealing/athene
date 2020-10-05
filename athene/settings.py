@@ -39,6 +39,10 @@ ALLOWED_HOSTS = (
 
 INSTALLED_APPS = [
     # 'django.contrib.admin',
+    "admin_tools",
+    "admin_tools.theming",
+    "admin_tools.menu",
+    "admin_tools.dashboard",
     "athene.apps.AtheneAdminConfig",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -84,13 +88,17 @@ TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
         "DIRS": [],
-        "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
                 "django.template.context_processors.debug",
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+            ],
+            "loaders": [
+                "admin_tools.template_loaders.Loader",
+                "django.template.loaders.filesystem.Loader",
+                "django.template.loaders.app_directories.Loader",
             ],
         },
     },
@@ -155,6 +163,7 @@ PHONENUMBER_DEFAULT_REGION = "US"
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+STATICFILES_DIRS = ["athene/static/"]
 
 INTERNAL_IPS = ["127.0.0.1"]
 
@@ -208,3 +217,6 @@ CELERY_RESULT_BACKEND = os.environ.get("REDIS_URL", "redis://127.0.0.1:6379/1")
 
 SLACK_WEBHOOK_MAP = json.loads(os.environ.get("SLACK_WEBHOOK_MAP", "{}"))
 DEFAULT_SLACK_CHANNEL = "#techstuff" if DEBUG else "#general"
+
+ADMIN_TOOLS_THEMING_CSS = "css/athene-admin.css"
+ADMIN_TOOLS_INDEX_DASHBOARD = "athene.dashboard.AtheneDashboard"

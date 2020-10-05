@@ -26,6 +26,7 @@ index = HttpResponseRedirect("https://seekhealing.org/")
 index["Cache-Control"] = "max-age=1209600"
 
 urlpatterns = [
+    path("admin_tools/", include("admin_tools.urls")),
     path("admin/", admin.site.urls),
     re_path("^robots.txt$", lambda r: robots_txt),
     path("webhooks/mailgun/", views.mailgun_webhook),
