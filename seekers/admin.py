@@ -110,8 +110,8 @@ class HumanAdmin(admin.ModelAdmin):
     list_filter = [FirstConversationFilter]
     readonly_fields = ["show_id", "created", "updated"]
     list_display = ["first_names", "last_names", "email", "phone_number", "first_conversation", "created"]
-    list_max_show_all = 500
-    list_per_page = 200
+    list_max_show_all = 2000
+    list_per_page = 1000
     search_fields = ["last_names", "first_names", "email", "phone_number"]
     actions = [
         "mass_text",
@@ -279,6 +279,7 @@ class ServiceFilter(admin.SimpleListFilter):
         "event_helper",
         "facilitator",
         "food_maker",
+        "herbal_first_aid",
         "listening_line",
         "mediator",
         "one_on_one_facilitator",
@@ -366,8 +367,8 @@ class SeekerAdmin(admin.ModelAdmin):
                 "fields": (
                     ("activity_buddy", "admin_human", "creative_human", "donations_getter"),
                     ("donor_thankyou_caller", "donor_thankyou_writer", "event_helper", "food_maker"),
-                    ("listening_line", "outreach", "ready_to_pair", "ride_share"),
-                    ("space_holder", "street_team"),
+                    ("herbal_first_aid", "listening_line", "outreach", "ready_to_pair"),
+                    ("ride_share", "space_holder", "street_team"),
                     "connection_agent_organization",
                 ),
             },
@@ -415,7 +416,7 @@ class SeekerAdmin(admin.ModelAdmin):
         "needs_connection",
         ServiceFilter,
     ]
-    search_fields = ["human__last_names", "human__first_names", "human__email", "human__"]
+    search_fields = ["human__last_names", "human__first_names", "human__email"]
 
     def seeker_pairs(self, instance):
         return (

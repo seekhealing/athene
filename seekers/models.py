@@ -198,6 +198,7 @@ class Seeker(HumanMixin, models.Model):
     ready_to_pair = models.BooleanField(default=False)
     admin_human = models.BooleanField(default=False)
     creative_human = models.BooleanField(default=False)
+    herbal_first_aid = models.BooleanField(default=False)
     connection_agent_organization = models.CharField(max_length=120, blank=True)
 
     def is_connection_agent(self):
