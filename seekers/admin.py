@@ -114,7 +114,7 @@ class HumanAdmin(admin.ModelAdmin):
     list_per_page = 1000
     search_fields = ["last_names", "first_names", "email", "phone_number"]
     actions = [
-        "mass_text",
+        mass_text,
     ]
     fieldsets = [
         (
@@ -428,7 +428,7 @@ class SeekerAdmin(admin.ModelAdmin):
             or "(Unpaired)"
         )
 
-    actions = ["mass_text"]
+    actions = [mass_text]
 
     def get_search_results(self, request, queryset, search_term):
         queryset, use_distinct = super().get_search_results(request, queryset, search_term)
