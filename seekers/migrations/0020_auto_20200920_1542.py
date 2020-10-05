@@ -12,10 +12,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.SeparateDatabaseAndState(
-            database_operations=[
-                migrations.RenameField(model_name="communitypartner", old_name="human_ptr", new_name="human"),
-                migrations.RenameField(model_name="seeker", old_name="human_ptr", new_name="human"),
-            ],
+            database_operations=[],
             state_operations=[
                 migrations.DeleteModel("seeker"),
                 migrations.DeleteModel("communitypartner"),

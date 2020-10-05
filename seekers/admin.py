@@ -1,12 +1,14 @@
 # flake8: noqa
 import copy
 from decimal import Decimal
+import functools
 import logging
+import operator
 
 from django.contrib import admin
 from django.contrib import messages
 from django.conf import settings
-from django.db.models import Count, Sum, Avg, Q
+from django.db.models import Count, Sum, Avg, Q, F, Func
 from django import forms
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
@@ -108,6 +110,8 @@ class HumanAdmin(admin.ModelAdmin):
     list_filter = [FirstConversationFilter]
     readonly_fields = ["show_id", "created", "updated"]
     list_display = ["first_names", "last_names", "email", "phone_number", "first_conversation", "created"]
+    list_max_show_all = 500
+    list_per_page = 200
     search_fields = ["last_names", "first_names", "email", "phone_number"]
     actions = [
         "mass_text",
@@ -231,6 +235,19 @@ class HumanAdmin(admin.ModelAdmin):
             return shortened_fieldsets
         return super().get_fieldsets(request, obj)
 
+    def get_search_results(self, request, queryset, search_term):
+        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
+        try:
+            _ = int(search_term)
+        except ValueError:
+            pass
+        else:
+            queryset = queryset.annotate(
+                phone_number_digits=Func(F("phone_number"), template=r"regexp_replace(%(expressions)s, '\D', '', 'g')")
+            )
+            queryset = queryset.filter(phone_number_digits__contains=search_term)
+        return queryset, use_distinct
+
 
 class IsActiveFilter(admin.SimpleListFilter):
     title = "Active"
@@ -279,10 +296,12 @@ class ServiceFilter(admin.SimpleListFilter):
         return s
 
     def lookups(self, request, model_admin):
-        return [(f, self.caps(f)) for f in self.service_fields]
+        return [("any", "(Any)")] + [(f, self.caps(f)) for f in self.service_fields]
 
     def queryset(self, request, queryset):
-        if self.value() in self.service_fields:
+        if self.value() == "any":
+            return queryset.filter(functools.reduce(operator.or_, [Q(**{f: True}) for f in self.service_fields]))
+        elif self.value() in self.service_fields:
             return queryset.filter(**{self.value(): True})
         return queryset
 
@@ -383,6 +402,8 @@ class SeekerAdmin(admin.ModelAdmin):
         "is_active",
         "is_connection_agent",
     ]
+    list_max_show_all = 500
+    list_per_page = 200
     list_display_links = ["first_names", "last_names"]
     list_filter = [
         "listener_trained",
@@ -394,7 +415,7 @@ class SeekerAdmin(admin.ModelAdmin):
         "needs_connection",
         ServiceFilter,
     ]
-    search_fields = ["human__last_names", "human__first_names", "human__email", "human__phone_number"]
+    search_fields = ["human__last_names", "human__first_names", "human__email", "human__"]
 
     def seeker_pairs(self, instance):
         return (
@@ -407,6 +428,19 @@ class SeekerAdmin(admin.ModelAdmin):
         )
 
     actions = ["mass_text"]
+
+    def get_search_results(self, request, queryset, search_term):
+        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
+        try:
+            _ = int(search_term)
+        except ValueError:
+            pass
+        else:
+            queryset = queryset.annotate(
+                phone_number_digits=Func(F("phone_number"), template=r"regexp_replace(%(expressions)s, '\D', '', 'g')")
+            )
+            queryset = queryset.filter(phone_number_digits__contains=search_term)
+        return queryset, use_distinct
 
 
 class IsActivePairingFilter(admin.SimpleListFilter):
@@ -504,11 +538,16 @@ class SeekerBenefitTypeAdmin(admin.ModelAdmin):
     search_fields = ["name"]
 
 
+class CommunityPartnerServiceAdmin(admin.ModelAdmin):
+    model = models.CommunityPartnerService
+
+
 class CommunityPartnerAdmin(admin.ModelAdmin):
     model = models.CommunityPartner
 
-    fieldsets = (("Partner details", {"fields": ["organization"],}),)
-    list_display = ["first_names", "last_names", "email", "phone_number"]
+    fieldsets = (("Partner details", {"fields": ["organization", "services"],}),)
+    list_filter = ["services"]
+    list_display = ["first_names", "last_names", "email", "phone_number", "organization"]
 
 
 admin.site.register(models.Human, HumanAdmin)
@@ -517,3 +556,4 @@ admin.site.register(models.CommunityPartner, CommunityPartnerAdmin)
 admin.site.register(models.SeekerPairing, SeekerPairingAdmin)
 admin.site.register(models.SeekerBenefitProxy, SeekerBenefitProxyAdmin)
 admin.site.register(models.SeekerBenefitType, SeekerBenefitTypeAdmin)
+admin.site.register(models.CommunityPartnerService, CommunityPartnerServiceAdmin)

@@ -105,7 +105,7 @@ class Human(models.Model):
         for chunk in [ride_volunteers[i : i + 25] for i in range(0, len(ride_volunteers), 25)]:  # noqa: E203
             result = client.distance_matrix(
                 origins=f"{self.street_address}, {self.zip_code}",
-                destinations=[f"{obj.human.street_address}, {obj.human.zip_code}" for obj in ride_volunteers],
+                destinations=[f"{obj.human.street_address}, {obj.human.zip_code}" for obj in chunk],
                 mode="driving",
                 units="imperial",
             )
@@ -163,7 +163,7 @@ TRANSPORTATION_CHOICES = [
 
 class Seeker(HumanMixin, models.Model):
 
-    human = models.OneToOneField(Human, primary_key=True, on_delete=models.CASCADE)
+    human = models.OneToOneField(Human, primary_key=True, db_column="human_ptr_id", on_delete=models.CASCADE)
 
     enroll_date = models.DateField(blank=True, null=True)
     inactive_date = models.DateField(blank=True, null=True)
@@ -339,7 +339,20 @@ class SeekerBenefitProxy(Seeker):
         verbose_name = "Seeker benefit report"
 
 
+class CommunityPartnerService(models.Model):
+    service_code = models.CharField(max_length=15, primary_key=True)
+    service_name = models.CharField(max_length=40, unique=True)
+
+    def __str__(self):
+        return self.service_name
+
+
 class CommunityPartner(HumanMixin, models.Model):
-    human = models.OneToOneField(Human, primary_key=True, on_delete=models.CASCADE)
+    human = models.OneToOneField(Human, primary_key=True, db_column="human_ptr_id", on_delete=models.CASCADE)
 
     organization = models.CharField(max_length=120, blank=True)
+
+    services = models.ManyToManyField(CommunityPartnerService)
+
+    def __str__(self):
+        return str(self.human)
