@@ -22,13 +22,13 @@ class Migration(migrations.Migration):
         migrations.RunSQL(
             sql=[
                 (
-                    "UPDATE seekers_human SET facebook_username = seekers_seeker.facebook_username, facebook_alias = seekers_seeker.facebook_alias FROM seekers_seeker WHERE seekers_seeker.human_id = seekers_human.id",
+                    "UPDATE seekers_human SET facebook_username = seekers_seeker.facebook_username, facebook_alias = seekers_seeker.facebook_alias FROM seekers_seeker WHERE seekers_seeker.human_ptr_id = seekers_human.id",
                     [],
                 ),
             ],
             reverse_sql=[
                 (
-                    "UPDATE seekers_seeker SET facebook_username = seekers_human.facebook_username, facebook_alias = seekers_human.facebook_alias FROM seekers_human WHERE seekers_seeker.human_id = seekers_human.id",
+                    "UPDATE seekers_seeker SET facebook_username = seekers_human.facebook_username, facebook_alias = seekers_human.facebook_alias FROM seekers_human WHERE seekers_seeker.human__ptr_id = seekers_human.id",
                     [],
                 ),
             ],
