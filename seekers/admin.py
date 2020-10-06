@@ -418,6 +418,10 @@ class SeekerAdmin(admin.ModelAdmin):
     ]
     search_fields = ["human__last_names", "human__first_names", "human__email"]
 
+    def has_add_permission(self, request):
+        # Nobody gets to add one directly - they have to create a human and enroll them as a Seeker
+        return False
+
     def seeker_pairs(self, instance):
         return (
             mark_safe(
@@ -549,6 +553,10 @@ class CommunityPartnerAdmin(admin.ModelAdmin):
     fieldsets = (("Partner details", {"fields": ["organization", "services"],}),)
     list_filter = ["services"]
     list_display = ["first_names", "last_names", "email", "phone_number", "organization"]
+
+    def has_add_permission(self, request):
+        # Nobody gets to add one directly - they have to create a human and mark them as a Community Partner
+        return False
 
 
 admin.site.register(models.Human, HumanAdmin)
