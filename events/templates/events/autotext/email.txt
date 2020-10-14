@@ -1,17 +1,21 @@
-{% autoescape off %}Hello, {{ human }}!
+{% autoescape off %}{% now "Ymd" as today %}Hello, {{ human }}!
 
 {{ calendar.email_opening_override|default:calendar.default_email_opening }}
 
+--------------------------------------------------------------------------------
 {% for event in events %}
---------------------------------------------------------------------------------
-{{ event.begin|date:"l F j, Y, P" }}{% if event.end %} to {{ event.end|date:"TIME_FORMAT" }}{% endif %}
---------------------------------------------------------------------------------
-{{ event.name }}
-{% if event.location %}{{ event.location|striptags|wordwrap:80|safe }}{% endif %}
-{% endfor %}
+{% if event.start_dt|date:"Ymd" == today %}Today ({{ event.start_dt|date:"l, F j" }}){% else %}{{ event.start_dt|date:"l, F j" }}{% endif %}, {{ event.start_dt|date:"P" }}:
+{{ event.summary }}{% if event.location %} at {{ event.location_name|default:event.location }}{% endif %}
+
+{% endfor %}{% regroup events|dictsort:"location_name" by location_name as location_list %}{% for location in location_list %}
+{% if location.grouper %}
+{{ location.grouper }} is at {{ location.list.0.location_place }}{% endif %}{% if location.grouper == "SeekHealing" %}
+Ring the doorbell at the back entrance of the United Way Building and someone will come let you in!
+{% elif location.grouper == "Making Whole" %}
+Go around back behind the building, across from Hi-Wire.{% endif %}{% endfor %}
 
 {{ calendar.email_closing_override|default:calendar.default_email_closing }}
 
 ---
 This is an automated message. If you would like to change your notification
-preferences, email info@seekhealing.org to do so. See you soon!{% endautoescape %}
+preferences, reply to this email with UNSUBSCRIBE. See you soon!{% endautoescape %}

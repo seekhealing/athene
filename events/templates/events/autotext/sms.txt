@@ -1,5 +1,12 @@
-{% autoescape off %}{{ calendar.sms_opening_override|default:calendar.default_sms_opening }}{% for event in events %}
-** {{ event.name }}{% if event.location %} @ {{ event.location }}{% endif %}, {{ event.begin|date:"D N j, Y, P" }}
+{% autoescape off %}{% now "Ymd" as today %}{{ calendar.sms_opening_override|default:calendar.default_sms_opening }}{% for event in events %}
+{% if event.start_dt|date:"Ymd" == today %}Today ({{ event.start_dt|date:"l, F j" }}){% else %}{{ event.start_dt|date:"l, F j" }}{% endif %}, {{ event.start_dt|date:"P" }}:
+{{ event.summary }}{% if event.location %} at {{ event.location_name|default:event.location }}{% endif %}
 {% endfor %}
+{% regroup events|dictsort:"location_name" by location_name as location_list %}{% for location in location_list %}
+{% if location.grouper %}
+{{ location.grouper }} is at {{ location.list.0.location_place }}{% endif %}{% if location.grouper == "SeekHealing" %}
+(Ring the doorbell at the back entrance of the United Way Building and someone will come let you in.)
+{% elif location.grouper == "Making Whole" %}
+(Go around back behind the building, across from Hi-Wire.){% endif %}{% endfor %}
 {{ calendar.sms_closing_override|default:calendar.default_sms_closing }}
-Email info@seekhealing.org to unsub.{% endautoescape %}
+Reply STOP to unsub.{% endautoescape %}

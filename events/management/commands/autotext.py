@@ -7,6 +7,7 @@ from django.core.management import BaseCommand
 from django.utils.timezone import now
 from dateutil.parser import parse
 import pytz
+import usaddress
 
 from events import models, google
 from seekers.models import Human
@@ -24,23 +25,58 @@ class Command(BaseCommand):
         parser.add_argument("--sms-only", action="store_true")
         parser.add_argument("--email-only", action="store_true")
 
+    tag_mapping = {
+        "Recipient": "recipient",
+        "AddressNumber": "address",
+        "AddressNumberPrefix": "address",
+        "AddressNumberSuffix": "address",
+        "StreetName": "address",
+        "StreetNamePreDirectional": "address",
+        "StreetNamePreModifier": "address",
+        "StreetNamePreType": "address",
+        "StreetNamePostDirectional": "address",
+        "StreetNamePostModifier": "address",
+        "StreetNamePostType": "address",
+        "CornerOf": "address",
+        "IntersectionSeparator": "address",
+        "LandmarkName": "recipient",
+        "USPSBoxGroupID": "address",
+        "USPSBoxGroupType": "address",
+        "USPSBoxID": "address",
+        "USPSBoxType": "address",
+        "BuildingName": "recipient",
+        "OccupancyType": "address",
+        "OccupancyIdentifier": "address",
+        "SubaddressIdentifier": "address",
+        "SubaddressType": "address",
+        "PlaceName": "city",
+        "StateName": "state",
+        "ZipCode": "zip_code",
+    }
+
     def normalize_event(self, event):
-        begin = parse(event["start"]["dateTime"]).astimezone(pytz.timezone("US/Eastern"))
-        end = parse(event["end"]["dateTime"]).astimezone(pytz.timezone("US/Eastern"))
+        start_dt = parse(event["start"]["dateTime"]).astimezone(pytz.timezone("US/Eastern"))
+        end_dt = parse(event["end"]["dateTime"]).astimezone(pytz.timezone("US/Eastern"))
         description = re.sub(r"\n+", "\n", event["description"].replace("<br>", "\n").replace("&nbsp;", " "))
-        zoom_link = re.search(r"https://zoom\.us/j/[0-9]{10}", description)
-        if zoom_link:
-            hangout_link = zoom_link.group(0)
+        # Location could be an place+address or a URL
+        location = event.get("location", "")
+        if location and not location.startswith(("https://", "http://")):
+            location_parts, _ = usaddress.tag(event.get("location"), tag_mapping=self.tag_mapping)
+            location_name = location_parts["recipient"]
+            location_place = location_parts["address"]
         else:
-            hangout_link = event.get("hangoutLink", "")
-        return dict(
-            name=event["summary"],
-            begin=begin,
-            end=end,
-            description=description,
-            location=event.get("location"),
-            hangoutLink=hangout_link,
+            location_name = location_place = ""
+        to_return = event.copy()
+        to_return.update(
+            dict(
+                start_dt=start_dt,
+                end_dt=end_dt,
+                description=description,
+                location_name=location_name,
+                location_place=location_place,
+            )
         )
+        return to_return
 
     def handle(self, *args, **options):
         client = google.Calendar()
