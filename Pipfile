@@ -35,6 +35,7 @@ celery = "<5"
 redis = "*"
 twilio = "*"
 django-admin-tools = "*"
+usaddress = "*"
 
 [requires]
 python_version = "3.8"
