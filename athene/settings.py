@@ -29,7 +29,7 @@ SECRET_KEY = os.environ.get("SECRET_KEY", "0p3ns3s4m3!#")
 DEBUG = bool(os.environ.get("DEBUG", ""))
 
 ALLOWED_HOSTS = (
-    []
+    ["bad-chicken.flowtheory.net"]
     if DEBUG
     else ["seekers.seekhealing.org", "seekhealing-athene.herokuapp.com", "seekhealing-athene-staging.herokuapp.com"]
 )
@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     "localflavor.us",
     "phonenumber_field",
     "ckeditor",
+    "social_django",
     "seekers",
     "events",
 ]
@@ -87,13 +88,15 @@ ROOT_URLCONF = "athene.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": ["athene/templates"],
         "OPTIONS": {
             "context_processors": [
                 "django.template.context_processors.debug",
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "social_django.context_processors.backends",
+                "social_django.context_processors.login_redirect",
             ],
             "loaders": [
                 "admin_tools.template_loaders.Loader",
@@ -220,3 +223,48 @@ DEFAULT_SLACK_CHANNEL = "#techstuff" if DEBUG else "#calendar"
 
 ADMIN_TOOLS_THEMING_CSS = "css/athene-admin.css"
 ADMIN_TOOLS_INDEX_DASHBOARD = "athene.dashboard.AtheneDashboard"
+
+AUTHENTICATION_BACKENDS = (
+    "social_core.backends.google.GoogleOAuth2",
+    "athene.backends.SuperUserOnlyModelBackend",
+)
+SOCIAL_AUTH_POSTGRES_JSONFIELD = True
+SOCIAL_AUTH_ADMIN_USER_SEARCH_FIELDS = ["username", "first_name", "last_name", "email"]
+SOCIAL_AUTH_PIPELINE = (
+    # Get the information we can about the user and return it in a simple
+    # format to create the user instance later. In some cases the details are
+    # already part of the auth response from the provider, but sometimes this
+    # could hit a provider API.
+    "social_core.pipeline.social_auth.social_details",
+    # Get the social uid from whichever service we're authing thru. The uid is
+    # the unique identifier of the given user in the provider.
+    "social_core.pipeline.social_auth.social_uid",
+    # Verifies that the current auth process is valid within the current
+    # project, this is where emails and domains whitelists are applied (if
+    # defined).
+    "social_core.pipeline.social_auth.auth_allowed",
+    # Checks if the current social-account is already associated in the site.
+    "social_core.pipeline.social_auth.social_user",
+    # Make up a username for this person, appends a random string at the end if
+    # there's any collision.
+    "social_core.pipeline.user.get_username",
+    # Send a validation email to the user to verify its email address.
+    # Disabled by default.
+    # 'social_core.pipeline.mail.mail_validation',
+    # Associates the current social details with another user account with
+    # a similar email address. Disabled by default.
+    "social_core.pipeline.social_auth.associate_by_email",
+    # Create a user account if we haven't found one yet.
+    "social_core.pipeline.user.create_user",
+    # Create the record that associates the social account with the user.
+    "social_core.pipeline.social_auth.associate_user",
+    # Populate the extra_data field in the social record with the values
+    # specified by settings (and the default ones like access_token, etc).
+    "social_core.pipeline.social_auth.load_extra_data",
+    # Update the user record with any changed info from the auth service.
+    "social_core.pipeline.user.user_details",
+)
+SOCIAL_AUTH_GOOGLE_OAUTH2_WHITELISTED_DOMAINS = ["seekhealing.org"]
+SOCIAL_AUTH_SESSION_EXPIRATION = True
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.environ.get("GOOGLE_CLIENT_ID")
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET")

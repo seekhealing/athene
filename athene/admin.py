@@ -9,3 +9,4 @@ class AtheneAdminSite(SeekersAdminSiteMixin, EventsAdminSiteMixin, admin.AdminSi
     site_title = "SeekHealing Seekers Database"
     site_url = None
     index_title = "Seekers Database"
+    login_template = "admin/admin_login.html"
