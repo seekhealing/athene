@@ -83,8 +83,21 @@ def mass_text(modeladmin, request, queryset):
 mass_text.short_description = "Send mass communications"
 
 
+class HumanKindFilter(admin.SimpleListFilter):
+    title = "type of human"
+    parameter_name = "human_kind"
+
+    def lookups(self, request, model_admin):
+        return (("prospects", "Prospects only"),)
+
+    def queryset(self, request, queryset):
+        if self.value() == "prospects":
+            return queryset.filter(seeker__isnull=True, communitypartner__isnull=True)
+        return queryset
+
+
 class FirstConversationFilter(admin.SimpleListFilter):
-    title = "First conversation scheduled"
+    title = "first conversation"
     parameter_name = "first_conv"
 
     def lookups(self, request, model_admin):
@@ -107,7 +120,7 @@ class FirstConversationFilter(admin.SimpleListFilter):
 class HumanAdmin(admin.ModelAdmin):
     inlines = [HumanNoteAdmin, HumanCalendarSubscriptionAdmin]
     model = models.Human
-    list_filter = [FirstConversationFilter]
+    list_filter = [HumanKindFilter, FirstConversationFilter]
     readonly_fields = ["show_id", "created", "updated"]
     list_display = ["first_names", "last_names", "email", "phone_number", "first_conversation", "created"]
     list_max_show_all = 2000
@@ -219,14 +232,6 @@ class HumanAdmin(admin.ModelAdmin):
         human = self.get_object(request, object_id)
         context = dict(human=human, rides=human.find_ride(), is_popup=True)
         return render(request, "admin/seekers/human/ride.html", context=context)
-
-    def _get_obj_does_not_exist_redirect(self, request, opts, object_id):
-        try:
-            _ = models.Seeker.objects.get(pk=object_id)
-        except models.Seeker.DoesNotExist:
-            return HttpResponseRedirect(reverse("admin:seekers_seeker_change", args=(object_id,)))
-        else:
-            return super()._get_obj_does_not_exist_redirect(request, opts, object_id)
 
     def get_fieldsets(self, request, obj=None):
         if obj is None and "_popup" in request.GET:

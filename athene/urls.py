@@ -31,6 +31,7 @@ urlpatterns = [
     re_path("^robots.txt$", lambda r: robots_txt),
     path("webhooks/mailgun/", views.mailgun_webhook),
     path("webhooks/twilio/", views.twilio_webhook),
+    path("auth/", include("social_django.urls", namespace="social")),
     path("", lambda r: index),
 ]
 

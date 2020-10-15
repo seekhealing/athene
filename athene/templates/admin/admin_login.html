@@ -1,0 +1,11 @@
+{% extends "admin/login.html" %}
+
+{% block content %}
+{% if 'local' in request.GET %}
+{{ block.super }}
+{% else %}
+<div id="content-main">
+<input style="width: 100%" type="button" class="default" value="Log in using Google" onClick="window.location.href='{% url "social:begin" "google-oauth2" %}?next={{ request.path }}'">
+</div>
+{% endif %}
+{% endblock %}
