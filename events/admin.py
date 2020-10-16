@@ -122,7 +122,7 @@ class CheckinModelForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
         try:
-            client.get_event(cleaned_data["calendar_id"], cleaned_data["event_id"])
+            client.get_event(cleaned_data["calendar_id"], cleaned_data["event_id"], cache_recurring=False)
         except (AssertionError, ValueError):
             raise forms.ValidationError("The event identifier given is invalid.")
 
@@ -176,7 +176,7 @@ class HumanAttendanceAdmin(admin.ModelAdmin):
         if "calendar" in request.GET and "event_id" in request.GET:
             # We're doing check-ins for the event
             calendar_id, event_id = request.GET["calendar"], request.GET["event_id"]
-            event = client.get_event(calendar_id, event_id)
+            event = client.get_event(calendar_id, event_id, cache_recurring=False)
             extra_context.update(
                 dict(
                     already_checked_in=self.model.objects.filter(calendar_id=calendar_id, event_id=event_id).order_by(
