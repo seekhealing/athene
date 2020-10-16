@@ -122,15 +122,13 @@ class CheckinModelForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
         try:
-            event = client.get_event(cleaned_data["calendar_id"], cleaned_data["event_id"])
-            if event.get("recurringEventId"):
-                assert event.get("recurringEventid") == cleaned_data["recurring_event_id"]
+            client.get_event(cleaned_data["calendar_id"], cleaned_data["event_id"], cache_recurring=False)
         except (AssertionError, ValueError):
             raise forms.ValidationError("The event identifier given is invalid.")
 
     class Meta:
         model = models.HumanAttendance
-        fields = ["human", "calendar", "event_id", "recurring_event_id"]
+        fields = ["human", "calendar", "event_id"]
 
 
 class DatePickerForm(forms.Form):
@@ -140,7 +138,8 @@ class DatePickerForm(forms.Form):
 class HumanAttendanceAdmin(admin.ModelAdmin):
     model = models.HumanAttendance
     autocomplete_fields = ["human"]
-    hidden_fields = ["calendar", "event_id", "recurring_event_id"]
+    hidden_fields = ["calendar", "event_id"]
+    exclude = ["legacy_recurring_event_id"]
 
     def has_change_permission(self, request, obj=None):
         return False
@@ -164,7 +163,6 @@ class HumanAttendanceAdmin(admin.ModelAdmin):
             summary=event["summary"],
             event_id=event["id"],
             location=event.get("location", ""),
-            recurring_event_id=event.get("recurringEventId"),
             start_dt=start_dt,
             end_dt=end_dt,
         )
@@ -178,7 +176,7 @@ class HumanAttendanceAdmin(admin.ModelAdmin):
         if "calendar" in request.GET and "event_id" in request.GET:
             # We're doing check-ins for the event
             calendar_id, event_id = request.GET["calendar"], request.GET["event_id"]
-            event = client.get_event(calendar_id, event_id)
+            event = client.get_event(calendar_id, event_id, cache_recurring=False)
             extra_context.update(
                 dict(
                     already_checked_in=self.model.objects.filter(calendar_id=calendar_id, event_id=event_id).order_by(

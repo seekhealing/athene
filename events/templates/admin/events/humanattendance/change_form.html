@@ -21,7 +21,7 @@
                 <caption>Events Available for Check-In</caption>
                 {% for event in upcoming_events %}
                 <tr>
-                <th scope="row"><a href=".?calendar={{ event.calendar_id|urlencode }}&event_id={{ event.event_id|urlencode }}&recurring_event_id={{ event.recurring_event_id|urlencode }}">{{ event.summary}}</th>
+                <th scope="row"><a href=".?calendar={{ event.calendar_id|urlencode }}&event_id={{ event.event_id|urlencode }}">{{ event.summary}}</th>
                 <td>{{ event.start_dt|date:"N j, Y P"}} - {{ event.end_dt|date:"P" }}</td>
                 </tr>
                 {% empty %}

@@ -1,11 +1,14 @@
 import logging
 
-from django.db import models
+from dateutil import parser as dt_parser
+from django.db import models, transaction
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.template import Context, Template, loader
 from django.utils.functional import cached_property
 from django.utils.timezone import now
 from multiselectfield import MultiSelectField
+from pytz import timezone
 
 from seekers import tasks, constants
 from . import google
@@ -79,11 +82,49 @@ class Calendar(models.Model):
             self.name = calendar_obj["summary"]
 
 
+class CalendarEvent(models.Model):
+    id = models.CharField(max_length=120, primary_key=True)
+    summary = models.CharField(max_length=200, blank=True, default="")
+    start_time = models.DateTimeField(blank=True, null=True)
+    recurring_event_id = models.CharField(max_length=120, null=True, db_index=True)
+    last_updated = models.DateTimeField(blank=True, null=True)
+    json = models.JSONField(default=dict)
+
+    def __str__(self):
+        return self.summary
+
+    @classmethod
+    def cache(cls, event):
+        start_time = dt_parser.parse(event["start"].get("dateTime", event["start"].get("date")))
+        if not start_time.tzinfo:
+            start_time = start_time.astimezone(timezone(settings.TIME_ZONE))
+        with transaction.atomic():
+            event_obj, created = cls.objects.get_or_create(
+                id=event["id"],
+                defaults=dict(
+                    summary=event["summary"],
+                    start_time=start_time,
+                    recurring_event_id=event.get("recurringEventId"),
+                    last_updated=dt_parser.parse(event["updated"]),
+                    json=event,
+                ),
+            )
+            if not created and event_obj.last_updated < dt_parser.parse(event["updated"]):
+                event_obj.summary = event["summary"]
+                event_obj.start_time = start_time
+                event_obj.last_updated = dt_parser.parse(event["updated"])
+                event_obj.json = event
+                event_obj.save(force_update=True)
+        return event_obj, created
+
+
 class HumanAttendance(models.Model):
     human = models.ForeignKey("seekers.Human", verbose_name="Attendee", on_delete=models.CASCADE)
     calendar = models.ForeignKey(Calendar, on_delete=models.CASCADE)
     event_id = models.CharField(max_length=120, db_index=True)
-    recurring_event_id = models.CharField(max_length=120, blank=True, db_index=True)
+    legacy_recurring_event_id = models.CharField(
+        max_length=120, db_column="recurring_event_id", blank=True, db_index=True
+    )
     created = models.DateTimeField(auto_now_add=True)
 
     @cached_property
