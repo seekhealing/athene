@@ -4,6 +4,7 @@ import logging
 import os
 import pickle
 
+from django.apps import apps
 from googleapiclient.discovery import build
 from googleapiclient import errors
 from google.auth.transport.requests import Request
@@ -39,11 +40,16 @@ class Calendar(object):
             raise ValueError(f"Invalid calendar ID reference: {e.args}")
         return result
 
-    def get_event(self, calendar_id, event_id):
+    def get_event(self, calendar_id, event_id, cache_recurring=True):
         try:
             result = self.service.events().get(calendarId=calendar_id, eventId=event_id).execute()
         except errors.HttpError as e:
             raise ValueError(f"Invalid event ID reference: {e.args}")
+        else:
+            CalendarEvent = apps.get_model("events", "CalendarEvent")
+            calendarevent_obj, _ = CalendarEvent.cache(result)
+            if cache_recurring and calendarevent_obj.recurring_event_id:
+                self.get_recurring_events(calendar_id, calendarevent_obj.recurring_event_id)
         return result
 
     def get_recurring_events(self, calendar_id, recurring_event_id, start_dt=None, count=25):
@@ -56,7 +62,11 @@ class Calendar(object):
             )
         except errors.HttpError as e:
             raise ValueError(f"Invalid recurring event lookup: {e.args}")
-        return result.get("items", [])
+        events = result.get("items", [])
+        for event in events:
+            CalendarEvent = apps.get_model("events", "CalendarEvent")
+            CalendarEvent.cache(event)
+        return events
 
     def get_upcoming_events(self, calendar_id, start_dt=None, end_dt=None, count=25):
         if start_dt is None:
@@ -82,7 +92,11 @@ class Calendar(object):
             )
         except errors.HttpError as e:
             raise ValueError(f"Invalid event lookup: {e.args}")
-        return result.get("items", [])
+        events = result.get("items", [])
+        for event in events:
+            CalendarEvent = apps.get_model("events", "CalendarEvent")
+            CalendarEvent.cache(event)
+        return events
 
 
 calendar = Calendar()
