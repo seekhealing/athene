@@ -25,6 +25,8 @@ DAYS_OF_WEEK = [
     (6, "Saturday"),
 ]
 
+CHANNEL_CHOICES = [(channel, channel) for channel in settings.SLACK_WEBHOOK_MAP.keys()]
+
 
 class Calendar(models.Model):
     calendar_id = models.CharField(max_length=250, primary_key=True)
@@ -33,6 +35,7 @@ class Calendar(models.Model):
     track_attendance = models.BooleanField(default=False)
     send_autotext_days = MultiSelectField(choices=DAYS_OF_WEEK, blank=True)
     autotext_days_in_advance = models.PositiveIntegerField(null=True, blank=True)
+    replies_go_to = models.CharField(max_length=40, choices=CHANNEL_CHOICES, default="#rides")
     default_email_opening = models.TextField(
         blank=True, default="", help_text="Prepended to autotext emails - break lines at 80 columns"
     )
@@ -169,7 +172,9 @@ class HumanCalendarSubscription(models.Model):
         content = template_obj.render(context)
         today = Template('{{ timestamp|date:"DATE_FORMAT" }}').render(Context(dict(timestamp=now())))
         email_subject = f"Upcoming {self.calendar.name} - {today}"
-        tasks.send_message.delay(None, self.human.id, self.contact_method, content, email_subject)
+        tasks.send_message.delay(
+            None, self.human.id, self.contact_method, content, email_subject, self.calendar.replies_go_to
+        )
 
     class Meta:
         unique_together = [("human", "calendar")]

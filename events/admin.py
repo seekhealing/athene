@@ -88,6 +88,7 @@ class CalendarAdmin(admin.ModelAdmin):
                     "track_attendance",
                     "send_autotext_days",
                     "autotext_days_in_advance",
+                    "replies_go_to",
                 ),
             },
         ),
