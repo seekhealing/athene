@@ -8,3 +8,4 @@ local/
 vendor/
 *.dump
 __pycache__/
+*.csv
