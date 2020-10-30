@@ -4,6 +4,16 @@
 {% block extrahead %}{{ block.super }}
 <script src="{% url 'admin:jsi18n' %}"></script>
 {{ media }}
+<script>
+(function($) {
+    $(document).ready(function() {
+      $('form').submit(function() {
+        $(this).find(':submit').prop({disabled: true});
+        console.log('fired.');
+      });
+    });
+})(django.jQuery);
+</script>
 {% endblock %}
 
 {% block extrastyle %}
