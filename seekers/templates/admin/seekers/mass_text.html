@@ -2,9 +2,18 @@
 {% load admin_urls admin_modify static %}
 
 {% block extrahead %}
-    {{ block.super }}
-    {{ media }}
-    <script type="text/javascript" src="{% static 'admin/js/cancel.js' %}"></script>
+{{ block.super }}
+{{ media }}
+<script>
+(function($) {
+    $(document).ready(function() {
+      $('form').submit(function() {
+        $(this).find(':submit').prop({disabled: true});
+      });
+    });
+})(django.jQuery);
+</script>
+<script type="text/javascript" src="{% static 'admin/js/cancel.js' %}"></script>
 {% endblock %}
 {% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static "admin/css/forms.css" %}">{% endblock %}
 

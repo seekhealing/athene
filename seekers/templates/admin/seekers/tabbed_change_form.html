@@ -9,7 +9,6 @@
     $(document).ready(function() {
       $('form').submit(function() {
         $(this).find(':submit').prop({disabled: true});
-        console.log('fired.');
       });
     });
 })(django.jQuery);
@@ -42,6 +41,14 @@
 {% if change %}{% if not is_popup %}
   <ul class="object-tools">
     {% block object-tools-items %}
+      {% if original %}
+      <form id="masstext-form" action="../.." method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="mass_text">
+        <input type="hidden" name="_selected_action" value="{{ original.pk }}">
+        <li><a href="#" onClick="document.getElementById('masstext-form').submit()">Send text/email</a></li>
+      </form>
+      {% endif %}
       {% if not original.human.seeker %}<li><a href="{% url "admin:seekers_human_enroll" object_id=original.pk %}">Enroll seeker</a></li>{% endif %}
       {% if not original.human.communitypartner %}<li><a href="{% url "admin:seekers_human_partner" object_id=original.pk %}">Mark as community partner</a></li>{% endif %}
       {% if original.human.street_address %}
