@@ -144,7 +144,11 @@ class HumanAttendance(models.Model):
         return event_obj
 
     def __str__(self):
-        return f'{self.human} went to {self.event.get("summary") or "Unknown event"}'
+        try:
+            related_event = CalendarEvent.objects.get(id=self.event_id)
+        except CalendarEvent.DoesNotExist:
+            related_event, _ = CalendarEvent.cache(self.event)
+        return f'{self.human} went to {related_event.summary or "Unknown event"}'
 
     class Meta:
         verbose_name = "Event attendance"
