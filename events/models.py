@@ -84,6 +84,9 @@ class Calendar(models.Model):
         else:
             self.name = calendar_obj["summary"]
 
+    class Meta:
+        permissions = [("can_send_to_subscribers", "Can send messages to calendar subscribers")]
+
 
 class CalendarEvent(models.Model):
     id = models.CharField(max_length=120, primary_key=True)

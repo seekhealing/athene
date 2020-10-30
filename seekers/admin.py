@@ -50,7 +50,26 @@ class MailchimpForm(forms.Form):
     )
 
 
+def recipient_count_allowed(user, count):
+    if user.has_perm("seekers.can_send_masstext_to_many"):
+        return True
+    if user.has_perm("seekers.can_send_masstext_to_several"):
+        return count <= 10
+    if user.has_perm("seekers.can_send_masstext_to_one"):
+        return count <= 1
+    return False
+
+
 def mass_text(modeladmin, request, queryset):
+    human_count = queryset.count()
+    if not recipient_count_allowed(request.user, human_count):
+        if human_count == 1:
+            modeladmin.message_user(request, "You do not have permission to send emails/texts.", messages.ERROR)
+        else:
+            modeladmin.message_user(
+                request, f"You do not have permission to send emails/texts to {human_count} humans.", messages.ERROR
+            )
+        return None
     if request.POST.get("submitted"):
         form_obj = MassTextForm(request.POST)
         if form_obj.is_valid():
@@ -66,7 +85,7 @@ def mass_text(modeladmin, request, queryset):
                     form_obj.cleaned_data["email_subject"],
                     form_obj.cleaned_data["reply_to_channel"],
                 )
-            modeladmin.message_user(request, f"Sending email/SMS to {len(queryset)} human(s).", messages.SUCCESS)
+            modeladmin.message_user(request, f"Sending email/SMS to {human_count} human(s).", messages.SUCCESS)
             return None
     else:
         form_obj = MassTextForm()

@@ -22,6 +22,11 @@ class HumanCalendarSubscriptionAdmin(admin.TabularInline):
 
 
 def mass_text(modeladmin, request, queryset):
+    if not request.user.has_perm("events.can_send_to_subscribers"):
+        modeladmin.message_user(
+            request, "You do not have permission to mass-text calendar subscribers.", messages.ERROR
+        )
+        return None
     if request.POST.get("submitted"):
         form_obj = MassTextForm(request.POST)
         if form_obj.is_valid():

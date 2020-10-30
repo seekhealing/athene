@@ -119,6 +119,11 @@ class Human(models.Model):
         verbose_name = "Human"
         ordering = ["first_names", "last_names"]
         index_together = [("last_names", "first_names")]
+        permissions = [
+            ("can_send_masstext_to_one", "Can send individualized text/emails"),
+            ("can_send_masstext_to_several", "Can send text/emails to several humans at once"),
+            ("can_send_masstext_to_many", "Can send text/emails to lots of humans at once"),
+        ]
 
 
 class HumanMixin:
