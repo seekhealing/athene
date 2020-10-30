@@ -229,6 +229,9 @@ class Seeker(HumanMixin, models.Model):
                 pairs.append((pairing.id, pairing.left))
         return pairs
 
+    class Meta:
+        ordering = ["human__first_names", "human__last_names"]
+
 
 def today():
     return timezone.now().date()
@@ -362,3 +365,6 @@ class CommunityPartner(HumanMixin, models.Model):
 
     def __str__(self):
         return str(self.human)
+
+    class Meta:
+        ordering = ["human__first_names", "human__last_names"]
