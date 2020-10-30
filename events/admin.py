@@ -12,6 +12,7 @@ from pytz import timezone
 from . import models
 from .google import calendar as client
 from seekers.forms import MassTextForm
+from seekers.models import Human
 from seekers import tasks, constants
 
 
@@ -30,22 +31,42 @@ def mass_text(modeladmin, request, queryset):
     if request.POST.get("submitted"):
         form_obj = MassTextForm(request.POST)
         if form_obj.is_valid():
-            recipients = (
-                models.HumanCalendarSubscription.objects.filter(calendar__in=queryset.values_list("pk", flat=True))
-                .values_list("human", "contact_method")
-                .distinct()
-            )
-            for human_id, contact_method in recipients:
-                tasks.send_message.delay(
-                    request.user.id,
-                    human_id,
-                    contact_method,
-                    form_obj.cleaned_data.get("sms_body" if contact_method == constants.SMS else "email_body"),
-                    form_obj.cleaned_data["email_subject"],
-                    form_obj.cleaned_data["reply_to_channel"],
+            if not request.POST.get("preview"):
+                recipients = (
+                    models.HumanCalendarSubscription.objects.filter(calendar__in=queryset.values_list("pk", flat=True))
+                    .values_list("human", "contact_method")
+                    .distinct()
                 )
-            modeladmin.message_user(request, f"Sending email/SMS to {len(recipients)} human(s).", messages.SUCCESS)
-            return None
+                for human_id, contact_method in recipients:
+                    tasks.send_message.delay(
+                        request.user.id,
+                        human_id,
+                        contact_method,
+                        form_obj.cleaned_data.get("sms_body" if contact_method == constants.SMS else "email_body"),
+                        form_obj.cleaned_data["email_subject"],
+                        form_obj.cleaned_data["reply_to_channel"],
+                    )
+                modeladmin.message_user(request, f"Sending email/SMS to {len(recipients)} human(s).", messages.SUCCESS)
+                return None
+            try:
+                human_obj = Human.objects.get(email=request.user.email)
+            except Human.DoesNotExist:
+                modeladmin.message_user(
+                    request,
+                    f"You cannot generate previews, as there is no Human record whose email is {request.user.email}.",
+                    messages.ERROR,
+                )
+            else:
+                for contact_method in [constants.EMAIL, constants.SMS]:
+                    tasks.send_message.delay(
+                        request.user.id,
+                        human_obj.pk,
+                        contact_method,
+                        form_obj.cleaned_data.get("sms_body" if contact_method == constants.SMS else "email_body"),
+                        form_obj.cleaned_data["email_subject"],
+                        form_obj.cleaned_data["reply_to_channel"],
+                    )
+                modeladmin.message_user(request, "Preview email and SMS sent to you.", messages.SUCCESS)
     else:
         form_obj = MassTextForm()
     context = dict(

@@ -24,7 +24,7 @@
 
 {% block content %}
 <div id="content-main">
-<form action="." method="POST">
+<form id="masstext-form" action="." method="POST">
 <div>
 {% if form.errors %}
     <p class="errornote">
@@ -56,9 +56,11 @@
 {% endfor %}
 <input type="hidden" name="action" value="mass_text">
 <input type="hidden" name="submitted" value="yes">
+<input type="hidden" name="preview" value="">
 {% endblock %}
 
 <div class="submit-row">
+<input type="button" value="Preview message" onClick="document.getElementById('masstext-form')['preview'].value='1';document.getElementById('masstext-form').submit();">
 <input type="submit" value="Send messages">
 </div>
 </div>
