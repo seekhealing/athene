@@ -280,17 +280,17 @@ class HumanAdmin(admin.ModelAdmin):
         return super().get_fieldsets(request, obj)
 
     def get_search_results(self, request, queryset, search_term):
-        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
+        search_qs, use_distinct = super().get_search_results(request, queryset, search_term)
         try:
             _ = int(search_term)
         except ValueError:
             pass
         else:
-            queryset = queryset.annotate(
+            phone_qs = queryset.annotate(
                 phone_number_digits=Func(F("phone_number"), template=r"regexp_replace(%(expressions)s, '\D', '', 'g')")
             )
-            queryset = queryset.filter(phone_number_digits__contains=search_term)
-        return queryset, use_distinct
+            search_qs = search_qs | phone_qs.filter(phone_number_digits__contains=search_term)
+        return search_qs, use_distinct
 
 
 class IsActiveFilter(admin.SimpleListFilter):
