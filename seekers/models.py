@@ -183,6 +183,7 @@ class Seeker(HumanMixin, models.Model):
     enroll_date = models.DateField(blank=True, null=True)
     inactive_date = models.DateField(blank=True, null=True)
     needs = models.ManyToManyField(SeekerNeedType, blank=True, null=True)
+    lt_complete = models.DateField("Completed Listening Training", blank=True, null=True)
 
     def is_active(self):
         return self.inactive_date is None
@@ -191,10 +192,6 @@ class Seeker(HumanMixin, models.Model):
     is_active.short_description = "Active"
 
     seeker_pairings = models.ManyToManyField("self", through="SeekerPairing", symmetrical=False)
-
-    listener_trained = models.BooleanField("Listener trained", editable=False, default=False)
-    extra_care = models.BooleanField("Extra care program", editable=False, default=False)
-    extra_care_graduate = models.BooleanField("Extra care graduate", editable=False, default=False)
 
     ride_share = models.BooleanField(default=False)
     space_holder = models.BooleanField(default=False, verbose_name="Space Owl")
@@ -277,30 +274,6 @@ class SeekerPairingMeeting(models.Model):
         ordering = ["-meeting_date"]
 
 
-SEEKER_MILESTONES = [(1, "Listening trained"), (2, "Extra-care enrolled"), (3, "Extra-care graduated")]
-
-
-class SeekerMilestone(models.Model):
-    seeker = models.ForeignKey(Seeker, on_delete=models.CASCADE)
-    date = models.DateField()
-    milestone = models.IntegerField(choices=SEEKER_MILESTONES)
-
-    def __str__(self):
-        return f"{self.seeker} - {self.get_milestone_display()}"
-
-    def save(self, *args, **kwargs):
-        super(SeekerMilestone, self).save(*args, **kwargs)
-        seeker_milestones = SeekerMilestone.objects.filter(seeker=self.seeker_id).values_list("milestone", flat=True)
-        self.seeker.listener_trained = 1 in seeker_milestones
-        self.seeker.extra_care = 2 in seeker_milestones and 3 not in seeker_milestones
-        self.seeker.extra_care_graduate = 3 in seeker_milestones
-        self.seeker.save()
-
-    class Meta:
-        ordering = ["date"]
-        verbose_name = "Milestone"
-
-
 class HumanNote(models.Model):
     human = models.ForeignKey(Human, on_delete=models.CASCADE)
     created = models.DateTimeField(auto_now_add=True)
@@ -315,47 +288,6 @@ class HumanNote(models.Model):
     class Meta:
         ordering = ("-created",)
         verbose_name = "Note"
-
-
-class SeekerBenefitType(models.Model):
-    name = models.CharField(max_length=120)
-    default_cost = models.DecimalField(decimal_places=2, max_digits=5, blank=True, null=True)
-
-    def __str__(self):
-        return self.name
-
-    class Meta:
-        ordering = ("name",)
-
-
-class SeekerBenefit(models.Model):
-    seeker = models.ForeignKey(Seeker, on_delete=models.CASCADE)
-    benefit_type = models.ForeignKey(SeekerBenefitType, on_delete=models.CASCADE)
-    cost = models.DecimalField(decimal_places=2, max_digits=5)
-    date = models.DateField()
-
-    def __str__(self):
-        return f"{self.seeker} @ {self.benefit_type} on {self.date}"
-
-    class Meta:
-        ordering = ("-date",)
-
-
-# A proxy model to register a special admin class just for managing seeker benefits
-class SeekerBenefitProxy(Seeker):
-    def this_month(self):
-        qs = self.seekerbenefit_set.filter(date__month=timezone.now().month).select_related()
-        result = qs.aggregate(total_cost=models.Sum("cost"))
-        return result["total_cost"]
-
-    def all_time(self):
-        qs = self.seekerbenefit_set.all().select_related()
-        result = qs.aggregate(total_cost=models.Sum("cost"))
-        return result["total_cost"]
-
-    class Meta:
-        proxy = True
-        verbose_name = "Seeker benefit report"
 
 
 class CommunityPartnerService(models.Model):

@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     "social_django",
     "seekers",
     "events",
+    "clinical",
 ]
 if DEBUG:
     try:

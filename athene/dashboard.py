@@ -1,12 +1,18 @@
 from admin_tools.dashboard import modules, Dashboard
 
 HUMAN_MODEL_LIST = modules.ModelList(
-    title="Human beings", models=("seekers.models.Human", "seekers.models.Seeker", "seekers.models.CommunityPartner")
+    title="Human beings",
+    models=(
+        "seekers.models.Human",
+        "seekers.models.Seeker",
+        "clinical.models.ExtraCare",
+        "seekers.models.CommunityPartner",
+    ),
 )
 
 PROGRAM_MANAGEMENT_LIST = modules.ModelList(
     title="Program management",
-    models=("seekers.models.SeekerPairing", "events.models.HumanAttendance", "seekers.models.SeekerBenefitProxy"),
+    models=("seekers.models.SeekerPairing", "events.models.HumanAttendance", "clinical.models.ExtraCareBenefitProxy"),
 )
 
 ATHENE_SETUP_LIST = modules.ModelList(
@@ -14,7 +20,7 @@ ATHENE_SETUP_LIST = modules.ModelList(
     models=(
         "events.models.Calendar",
         "seekers.models.SeekerNeedType",
-        "seekers.models.SeekerBenefitType",
+        "clinical.models.ExtraCareBenefitType",
         "seekers.models.CommunityPartnerService",
     ),
 )

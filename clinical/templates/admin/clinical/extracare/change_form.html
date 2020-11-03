@@ -1,6 +1,13 @@
 {% extends "admin/seekers/tabbed_change_form.html" %}
 {% load static %}
 
+{% block object-tools-items %}
+<li><a href="{% url "admin:clinical_extracarebenefitproxy_change" object_id %}?_to_field=human&_popup=1"
+       class="related-widget-wrapper-link change-related"
+       id="change_id_seekerbenefit">Seeker benefits</a></li>
+{{ block.super }}
+{% endblock %}
+
 {% block field_sets %}
 <fieldset class="module aligned">
   <div class="form-row">

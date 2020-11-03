@@ -28,12 +28,6 @@ logger = logging.getLogger(__name__)
 csrf_protect_m = method_decorator(csrf_protect)
 
 
-class SeekerMilestoneAdmin(admin.TabularInline):
-    model = models.SeekerMilestone
-    extra = 1
-    classes = ["collapse"]
-
-
 class HumanNoteAdmin(admin.StackedInline):
     model = models.HumanNote
     extra = 1
@@ -309,6 +303,22 @@ class IsActiveFilter(admin.SimpleListFilter):
             return queryset
 
 
+class ListeningTrainedFilter(admin.SimpleListFilter):
+    title = "Listening Trained"
+    parameter_name = "listerning_trained"
+
+    def lookups(self, request, model_admin):
+        return (("1", "Yes"), ("0", "No"))
+
+    def queryset(self, request, queryset):
+        if self.value() == "1":
+            return queryset.filter(lt_complete__isnull=True)
+        elif self.value() == "0":
+            return queryset.filter(lt_complete__isnull=False)
+        else:
+            return queryset
+
+
 class ServiceFilter(admin.SimpleListFilter):
     title = "Service offer"
     parameter_name = "service_offer"
@@ -389,8 +399,6 @@ class PairingStatusFilter(admin.SimpleListFilter):
 
 
 class SeekerAdmin(admin.ModelAdmin):
-    inlines = [SeekerMilestoneAdmin]
-
     model = models.Seeker
     fieldsets = (
         (
@@ -398,10 +406,7 @@ class SeekerAdmin(admin.ModelAdmin):
             {
                 "fields": [
                     ("seeker_pairs", "needs"),
-                    "transportation",
-                    "listener_trained",
-                    "extra_care",
-                    "extra_care_graduate",
+                    ("transportation", "lt_complete"),
                 ],
             },
         ),
@@ -431,9 +436,6 @@ class SeekerAdmin(admin.ModelAdmin):
 
     readonly_fields = [
         "seeker_pairs",
-        "listener_trained",
-        "extra_care",
-        "extra_care_graduate",
     ]
     list_display = [
         "first_names",
@@ -441,9 +443,7 @@ class SeekerAdmin(admin.ModelAdmin):
         "email",
         "phone_number",
         "enroll_date",
-        "listener_trained",
-        "extra_care",
-        "extra_care_graduate",
+        "lt_complete",
         "is_active",
         "is_connection_agent",
     ]
@@ -451,9 +451,7 @@ class SeekerAdmin(admin.ModelAdmin):
     list_per_page = 200
     list_display_links = ["first_names", "last_names"]
     list_filter = [
-        "listener_trained",
-        "extra_care",
-        "extra_care_graduate",
+        ListeningTrainedFilter,
         IsActiveFilter,
         IsConnectionAgentFilter,
         PairingStatusFilter,
@@ -524,73 +522,6 @@ class SeekerPairingAdmin(admin.ModelAdmin):
     inlines = [SeekerPairingMeetingAdmin]
 
 
-class SeekerBenefitAdmin(admin.TabularInline):
-    model = models.SeekerBenefit
-    extra = 1
-    autocomplete_fields = ["benefit_type"]
-
-
-class SeekerBenefitProxyAdmin(admin.ModelAdmin):
-    model = models.SeekerBenefitProxy
-    inlines = [SeekerBenefitAdmin]
-    fieldsets = ((None, {"fields": tuple()}),)
-
-    def changeform_view(self, request, object_id=None, form_url="", extra_context=None):
-        extra_context = extra_context or {}
-        extra_context["benefit_types"] = dict(models.SeekerBenefitType.objects.all().values_list("id", "default_cost"))
-        return super().changeform_view(request, object_id, form_url, extra_context)
-
-    @csrf_protect_m
-    def changelist_view(self, request, extra_context=None):
-        today = timezone.now().date()
-
-        benefit_types = models.SeekerBenefitType.objects.all()
-        this_month_filter = Q(seekerbenefit__date__month=today.month)
-        this_year_filter = Q(seekerbenefit__date__year=today.year)
-
-        def _annotated(qs, filter_q):
-            to_return = qs.annotate(used=Count("seekerbenefit", filter=filter_q))
-            to_return = to_return.annotate(total=Sum("seekerbenefit__cost", filter=filter_q))
-            to_return = to_return.annotate(average_cost=Avg("seekerbenefit__cost", filter=filter_q))
-            return to_return
-
-        this_month = _annotated(benefit_types, this_month_filter)
-        this_year = _annotated(benefit_types, this_year_filter)
-        all_time = _annotated(benefit_types, None)
-
-        seekers_this_month = models.SeekerBenefit.objects.filter(date__month=today.month).aggregate(
-            count=Count("seeker")
-        )["count"]
-        total_spent_this_month = models.SeekerBenefit.objects.filter(date__month=today.month).aggregate(
-            total=Sum("cost")
-        )["total"] or Decimal("0")
-        if seekers_this_month:
-            avg_per_seeker = total_spent_this_month / seekers_this_month
-        else:
-            avg_per_seeker = Decimal("0")
-
-        cost_per_seeker = _annotated(models.Seeker.objects.all(), this_month_filter)
-        cost_per_seeker = cost_per_seeker.filter(used__gt=0).order_by("-used", "-total")
-
-        return TemplateResponse(
-            request,
-            "admin/seekers/seekerbenefitproxy/change_list.html",
-            context=dict(
-                today=today,
-                by_benefit_type=zip(this_month, this_year, all_time),
-                seekers_this_month=seekers_this_month,
-                total_spent_this_month=total_spent_this_month,
-                avg_per_seeker=avg_per_seeker,
-                cost_per_seeker=cost_per_seeker,
-                cl=self.get_changelist_instance(request),
-            ),
-        )
-
-
-class SeekerBenefitTypeAdmin(admin.ModelAdmin):
-    search_fields = ["name"]
-
-
 class CommunityPartnerServiceAdmin(admin.ModelAdmin):
     model = models.CommunityPartnerService
 
@@ -612,6 +543,4 @@ admin.site.register(models.Seeker, SeekerAdmin)
 admin.site.register(models.CommunityPartner, CommunityPartnerAdmin)
 admin.site.register(models.SeekerNeedType, SeekerNeedTypeAdmin)
 admin.site.register(models.SeekerPairing, SeekerPairingAdmin)
-admin.site.register(models.SeekerBenefitProxy, SeekerBenefitProxyAdmin)
-admin.site.register(models.SeekerBenefitType, SeekerBenefitTypeAdmin)
 admin.site.register(models.CommunityPartnerService, CommunityPartnerServiceAdmin)
