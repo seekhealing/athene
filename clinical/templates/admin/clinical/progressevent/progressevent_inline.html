@@ -9,7 +9,7 @@
 {% if inline_admin_formset.formset.instance %}
 <fieldset class="module aligned">
   {% for progressevent in inline_admin_formset.formset.instance.completed_events %}
-  <div class="form-row" style="background-color: {% if progressevent.phase == 'intake' or progressevent.phase == 'release' %}#f9f9f9{% elif progressevent.phase == 'exited' %}#fff9f9{% elif progressevent.phase == 'completed' %}#f9fff9{% else %}#fff{% endif %}">
+  <div class="form-row" style="background-color: {% if progressevent.phase == 'intake' or progressevent.phase == 'release' %}#f9f9f9{% elif progressevent.phase == 'exited' %}#ffe9e9{% elif progressevent.phase == 'completed' %}#e9ffe9{% else %}#fff{% endif %}">
     <div class="fieldBox">
       <label>{{ progressevent.event_type }}</label>
       <div class="readonly">{% if progressevent.occurred %}{{ progressevent.occurred }}{% else %}(excused){% endif %}</div>

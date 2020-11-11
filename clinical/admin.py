@@ -114,7 +114,7 @@ class ExtraCareAdmin(admin.ModelAdmin):
 
     def response_change(self, request, new_object):
         # Save the new object one more time to kick off the signals updating status
-        new_object.save()
+        models.ExtraCare.objects.get(pk=new_object.pk).save()
         return super().response_change(request, new_object)
 
     def get_urls(self):
@@ -151,6 +151,7 @@ class ExtraCareAdmin(admin.ModelAdmin):
 class ExtraCareBenefitAdmin(admin.TabularInline):
     model = models.ExtraCareBenefit
     extra = 1
+    fields = ["benefit_type", "cost", "scheduled", "date", "cancelled"]
     autocomplete_fields = ["benefit_type"]
 
 
@@ -158,6 +159,12 @@ class ExtraCareBenefitProxyAdmin(admin.ModelAdmin):
     model = models.ExtraCareBenefitProxy
     inlines = [ExtraCareBenefitAdmin]
     fieldsets = ((None, {"fields": tuple()}),)
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
     def changeform_view(self, request, object_id=None, form_url="", extra_context=None):
         extra_context = extra_context or {}
@@ -173,16 +180,19 @@ class ExtraCareBenefitProxyAdmin(admin.ModelAdmin):
         benefit_types = models.ExtraCareBenefitType.objects.all()
         this_month_filter = Q(extracarebenefit__date__month=today.month, extracarebenefit__date__year=today.year)
         this_year_filter = Q(extracarebenefit__date__year=today.year)
+        used_benefit_filter = Q(extracarebenefit__date__isnull=False) | Q(extracarebenefit__cancelled__isnull=False)
 
         def _annotated(qs, filter_q):
-            to_return = qs.annotate(used=Count("extracarebenefit", filter=filter_q))
-            to_return = to_return.annotate(total=Sum("extracarebenefit__cost", filter=filter_q))
-            to_return = to_return.annotate(average_cost=Avg("extracarebenefit__cost", filter=filter_q))
+            to_return = qs.annotate(used=Count("extracarebenefit", filter=filter_q & used_benefit_filter))
+            to_return = to_return.annotate(total=Sum("extracarebenefit__cost", filter=filter_q & used_benefit_filter))
+            to_return = to_return.annotate(
+                average_cost=Avg("extracarebenefit__cost", filter=filter_q & used_benefit_filter)
+            )
             return to_return
 
         this_month = _annotated(benefit_types, this_month_filter)
         this_year = _annotated(benefit_types, this_year_filter)
-        all_time = _annotated(benefit_types, None)
+        all_time = _annotated(benefit_types, Q())
 
         seekers_this_month = models.ExtraCareBenefit.objects.filter(date__month=today.month).aggregate(
             count=Count("extracare")

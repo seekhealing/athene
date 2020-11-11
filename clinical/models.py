@@ -6,7 +6,7 @@ from django import template
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models import signals
+from django.db.models import Q, signals
 from django.utils import timezone
 
 from seekers.models import Human, HumanMixin
@@ -74,10 +74,42 @@ class ExtraCareBenefit(models.Model):
     extracare = models.ForeignKey(ExtraCare, on_delete=models.CASCADE)
     benefit_type = models.ForeignKey(ExtraCareBenefitType, on_delete=models.CASCADE)
     cost = models.DecimalField(decimal_places=2, max_digits=5)
-    date = models.DateField()
+    scheduled = models.DateField()
+    rescheduled_count = models.PositiveIntegerField(default=0, editable=False)
+    date = models.DateField(blank=True, null=True)
+    cancelled = models.DateField(blank=True, null=True)
+
+    @classmethod
+    def from_db(cls, db, field_names, values):
+        # Default implementation of from_db() (subject to change and could
+        # be replaced with super()).
+        if len(values) != len(cls._meta.concrete_fields):
+            values = list(values)
+            values.reverse()
+            values = [values.pop() if f.attname in field_names else models.DEFERRED for f in cls._meta.concrete_fields]
+        instance = cls(*values)
+        instance._state.adding = False
+        instance._state.db = db
+        # customization to store the original field values on the instance
+        instance._loaded_values = dict(zip(field_names, values))
+        return instance
+
+    def clean(self):
+        if self.date and self.cancelled:
+            raise ValidationError("A benefit cannot both have occurred and be cancelled.")
+        tomorrow = timezone.now().date() + timedelta(days=1)
+        if (self.date and self.date > tomorrow) or (self.cancelled and self.cancelled > tomorrow):
+            raise ValidationError("You cannot use a future date for when a benefit was given.")
+        if not self._state.adding:
+            if (
+                self._loaded_values["scheduled"]
+                and self.scheduled
+                and self.scheduled != self._loaded_values["scheduled"]
+            ):
+                self.rescheduled_count += 1
 
     def __str__(self):
-        return f"{self.extracare} @ {self.benefit_type} on {self.date}"
+        return f"{self.extracare} @ {self.benefit_type} on {self.scheduled or self.date}"
 
     class Meta:
         ordering = ("-date",)
@@ -86,12 +118,14 @@ class ExtraCareBenefit(models.Model):
 # A proxy model to register a special admin class just for managing ECP benefits
 class ExtraCareBenefitProxy(ExtraCare):
     def this_month(self):
-        qs = self.extracarebenefit_set.filter(date__month=timezone.now().month).select_related()
+        qs = self.extracarebenefit_set.filter(
+            Q(date__isnull=False) | Q(cancelled__isnull=False), date__month=timezone.now().month
+        ).select_related()
         result = qs.aggregate(total_cost=models.Sum("cost"))
         return result["total_cost"]
 
     def all_time(self):
-        qs = self.extracarebenefit_set.all().select_related()
+        qs = self.extracarebenefit_set.filter(Q(date__isnull=False) | Q(cancelled__isnull=False)).select_related()
         result = qs.aggregate(total_cost=models.Sum("cost"))
         return result["total_cost"]
 
@@ -106,10 +140,26 @@ class ProgressEvent(models.Model):
     event_type = models.CharField(max_length=40)
     phase = models.CharField(max_length=20)
     scheduled = models.DateField(blank=True, null=True)
+    rescheduled_count = models.PositiveIntegerField(editable=False, default=0)
     occurred = models.DateField(blank=True, null=True)
     excused = models.DateField(blank=True, null=True)
     note = models.TextField(blank=True)
     complete = models.BooleanField(editable=False, default=False)
+
+    @classmethod
+    def from_db(cls, db, field_names, values):
+        # Default implementation of from_db() (subject to change and could
+        # be replaced with super()).
+        if len(values) != len(cls._meta.concrete_fields):
+            values = list(values)
+            values.reverse()
+            values = [values.pop() if f.attname in field_names else models.DEFERRED for f in cls._meta.concrete_fields]
+        instance = cls(*values)
+        instance._state.adding = False
+        instance._state.db = db
+        # customization to store the original field values on the instance
+        instance._loaded_values = dict(zip(field_names, values))
+        return instance
 
     def clean(self):
         if self.occurred and self.excused:
@@ -120,6 +170,13 @@ class ProgressEvent(models.Model):
                     raise ValidationError("Events cannot be marked complete with a future date.")
                 else:
                     logger.warning("Event allowed to be marked complete in the future because DEBUG is on.")
+        if not self._state.adding:
+            if (
+                self._loaded_values["scheduled"]
+                and self.scheduled
+                and (self.scheduled != self._loaded_values["scheduled"])
+            ):
+                self.rescheduled_count += 1
 
     def __str__(self):
         return f"{self.event_type} - {self.extracare}"
