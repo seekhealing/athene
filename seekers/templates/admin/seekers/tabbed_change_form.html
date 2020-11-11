@@ -8,7 +8,10 @@
 (function($) {
     $(document).ready(function() {
       $('form').submit(function() {
-        $(this).find(':submit').prop({disabled: true});
+        $(this).submit(function() {
+          return false;
+        });
+        return true;
       });
     });
 })(django.jQuery);

@@ -1,13 +1,19 @@
 from decimal import Decimal
+from functools import update_wrapper
 
-from django.contrib import admin
+from django.contrib import admin, messages
+from django.core.exceptions import ValidationError
 from django.db.models import Count, Sum, Avg, Q
+from django import forms
+from django.http import HttpResponseRedirect
+from django.shortcuts import get_object_or_404
 from django.template.response import TemplateResponse
+from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_protect
 
-from . import models
+from . import models, flow
 
 
 csrf_protect_m = method_decorator(csrf_protect)
@@ -23,12 +29,120 @@ class ExtraCareNoteAdmin(admin.StackedInline):
         return False
 
 
+class HiddenInputWithDisplay(forms.TextInput):
+    template_name = "widgets/hidden_with_display.html"
+
+
+class ProgressEventForm(forms.ModelForm):
+    class Meta:
+        model = models.ProgressEvent
+        widgets = {
+            "event_type": HiddenInputWithDisplay,
+            "phase": forms.HiddenInput,
+            "program_flow": forms.HiddenInput,
+            "note": forms.TextInput(attrs=dict(size=80)),
+        }
+        fields = forms.ALL_FIELDS
+
+
+class ProgressFormSet(forms.BaseInlineFormSet):
+    def __init__(self, data=None, files=None, instance=None, save_as_new=False, prefix=None, queryset=None, **kwargs):
+        # I've simply copied BaseInlineFormSet's __init__ method here, but added the additional
+        # queryset constraint to limit things to the current flow
+        if instance is None:
+            self.instance = self.fk.remote_field.model()
+        else:
+            self.instance = instance
+        self.save_as_new = save_as_new
+        if queryset is None:
+            queryset = self.model._default_manager
+        if self.instance.pk is not None:
+            qs = queryset.filter(
+                **{self.fk.name: self.instance, "program_flow": instance.current_program_flow, "complete": False}
+            )
+        else:
+            qs = queryset.none()
+        self.unique_fields = {self.fk.name}
+        super(forms.BaseInlineFormSet, self).__init__(data, files, prefix=prefix, queryset=qs, **kwargs)
+
+        # Add the generated field to form._meta.fields if it's defined to make
+        # sure validation isn't skipped on that field.
+        if self.form._meta.fields and self.fk.name not in self.form._meta.fields:
+            if isinstance(self.form._meta.fields, tuple):
+                self.form._meta.fields = list(self.form._meta.fields)
+            self.form._meta.fields.append(self.fk.name)
+        # End of the copying from BaseInlineFormSet
+
+        if self.instance.pk is not None:
+            event_types, phase, _ = flow.extra_care_flow(self.instance)
+            self.min_num = self.max_num = len(event_types)
+            for event in qs:
+                event_types.remove(event.event_type)
+            self.initial_extra = [
+                dict(event_type=event_type, phase=phase, program_flow=self.instance.current_program_flow)
+                for event_type in event_types
+            ]
+            self.extra = len(self.initial_extra)
+
+    def clean(self):
+        if any(self.errors):
+            return
+        errors = flow.validate_extra_care_flow(
+            self.instance, [form.cleaned_data for form in self.forms if form.has_changed()]
+        )
+        if errors:
+            raise ValidationError(errors)
+
+
+class ProgressEventInlineAdmin(admin.StackedInline):
+    fieldsets = (
+        (None, {"fields": (("event_type", "phase", "program_flow"), ("scheduled", "occurred", "excused"), ("note",))}),
+    )
+    model = models.ProgressEvent
+    can_delete = False
+    formset = ProgressFormSet
+    form = ProgressEventForm
+    template = "admin/clinical/progressevent/progressevent_inline.html"
+
+
 class ExtraCareAdmin(admin.ModelAdmin):
     model = models.ExtraCare
     fieldsets = ((None, {"fields": ("status",)}),)
     readonly_fields = ["status"]
     list_display = ["first_names", "last_names", "email", "phone_number"]
-    inlines = [ExtraCareNoteAdmin]
+    inlines = [ProgressEventInlineAdmin, ExtraCareNoteAdmin]
+
+    def response_change(self, request, new_object):
+        # Save the new object one more time to kick off the signals updating status
+        new_object.save()
+        return super().response_change(request, new_object)
+
+    def get_urls(self):
+        from django.urls import path
+
+        def wrap(view):
+            def wrapper(*args, **kwargs):
+                return self.admin_site.admin_view(view)(*args, **kwargs)
+
+            wrapper.model_admin = self
+            return update_wrapper(wrapper, view)
+
+        return [
+            path("<path:object_id>/exit_early/", wrap(self.exit_flow_early), name="clinical_extracare_exitearly"),
+        ] + super().get_urls()
+
+    @csrf_protect_m
+    def exit_flow_early(self, request, object_id):
+        if request.method == "POST":
+            extracare = get_object_or_404(models.ExtraCare, human_id=object_id)
+            if extracare.status == "active":
+                extracare.exit_early()
+                self.message_user(request, f"Exited program flow for {extracare}", messages.SUCCESS)
+            else:
+                self.message_user(
+                    request, f"Seeker {extracare} has no active program flow, so cannot exit early.", messages.ERROR,
+                )
+        return HttpResponseRedirect(reverse("admin:clinical_extracare_change", args=(object_id,)))
 
     def has_add_permission(self, request):
         return False

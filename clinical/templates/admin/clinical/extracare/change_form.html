@@ -2,6 +2,9 @@
 {% load static %}
 
 {% block object-tools-items %}
+{% if original and original.status == 'active' %}
+<li><form method="post" action="{% url "admin:clinical_extracare_exitearly" object_id %}">{% csrf_token %}<a href="#" onclick="this.parentNode.submit()">Exit program early</a></form></li>
+{% endif %}
 <li><a href="{% url "admin:clinical_extracarebenefitproxy_change" object_id %}?_to_field=human&_popup=1"
        class="related-widget-wrapper-link change-related"
        id="change_id_seekerbenefit">Seeker benefits</a></li>
