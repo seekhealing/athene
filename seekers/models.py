@@ -211,10 +211,10 @@ class Seeker(HumanMixin, models.Model):
     admin_human = models.BooleanField(default=False)
     creative_human = models.BooleanField(default=False)
     herbal_first_aid = models.BooleanField(default=False)
-    connection_agent_organization = models.CharField(max_length=120, blank=True)
+    connectionagent = models.ForeignKey("clinical.ConnectionAgent", null=True, blank=True, on_delete=models.SET_NULL)
 
     def is_connection_agent(self):
-        return bool(self.connection_agent_organization)
+        return self.connectionagent is not None
 
     is_connection_agent.boolean = True
     is_connection_agent.short_description = "Connection agent"

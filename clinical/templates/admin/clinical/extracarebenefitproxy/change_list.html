@@ -46,6 +46,11 @@
     </thead>
     <tbody>
     {% for this_month, this_year, all_time in by_benefit_type %}
+    {% ifchanged this_month.connection_agent %}
+    <tr>
+        <th scope="rowgroup" colspan="13" style="background: #417690; color: #fff">{% if this_month.connection_agent %}{{ this_month.connection_agent }}{% else %}(Miscellaneous){% endif %}</th>
+    </th>
+    {% endifchanged %}
     <tr class="{% cycle "row1" "row2" %}">
         <td>{{ this_month.name }}</td>
         <td>$ {{this_month.default_cost|floatformat:2 }}</td>

@@ -223,10 +223,15 @@ class ExtraCareBenefitProxyAdmin(admin.ModelAdmin):
         )
 
 
+class ConnectionAgentAdmin(admin.ModelAdmin):
+    search_fields = ["name", "point_of_contact"]
+
+
 class ExtraCareBenefitTypeAdmin(admin.ModelAdmin):
     search_fields = ["name"]
 
 
 admin.site.register(models.ExtraCare, ExtraCareAdmin)
 admin.site.register(models.ExtraCareBenefitProxy, ExtraCareBenefitProxyAdmin)
+admin.site.register(models.ConnectionAgent, ConnectionAgentAdmin)
 admin.site.register(models.ExtraCareBenefitType, ExtraCareBenefitTypeAdmin)

@@ -8,6 +8,8 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q, signals
 from django.utils import timezone
+from localflavor.us.models import USStateField, USZipCodeField
+from phonenumber_field.modelfields import PhoneNumberField
 
 from seekers.models import Human, HumanMixin
 from .constants import INTAKE_EVENTS, RELEASE_EVENTS
@@ -58,15 +60,37 @@ class ExtraCareNote(models.Model):
         verbose_name = "Note"
 
 
+class ConnectionAgent(models.Model):
+    name = models.CharField(max_length=80, unique=True)
+    point_of_contact = models.CharField(max_length=120, blank=True)
+    street_address = models.CharField(max_length=120, blank=True)
+    city = models.CharField(max_length=30, blank=True)
+    state = USStateField(default="NC")
+    zip_code = USZipCodeField(blank=True)
+    email = models.EmailField(
+        blank=True, error_messages=dict(unique="A person with this email is already in the system.")
+    )
+    phone_number = PhoneNumberField(
+        blank=True, error_messages=dict(unique="A person with this phone number is already in the system.")
+    )
+
+    def __str__(self):
+        return self.name
+
+
 class ExtraCareBenefitType(models.Model):
     name = models.CharField(max_length=120)
+    connectionagent = models.ForeignKey(ConnectionAgent, null=True, blank=True, on_delete=models.SET_NULL)
     default_cost = models.DecimalField(decimal_places=2, max_digits=5, blank=True, null=True)
 
     def __str__(self):
         return self.name
 
     class Meta:
-        ordering = ("name",)
+        ordering = (
+            "connectionagent",
+            "name",
+        )
         verbose_name = "Extra Care benefit type"
 
 
