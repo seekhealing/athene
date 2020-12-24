@@ -397,7 +397,7 @@ class SeekerAdmin(admin.ModelAdmin):
             "Seeker Details",
             {
                 "fields": [
-                    ("seeker_pairs", "needs_connection"),
+                    ("seeker_pairs", "needs"),
                     "transportation",
                     "listener_trained",
                     "extra_care",
@@ -457,7 +457,7 @@ class SeekerAdmin(admin.ModelAdmin):
         IsActiveFilter,
         IsConnectionAgentFilter,
         PairingStatusFilter,
-        "needs_connection",
+        "needs",
         ServiceFilter,
     ]
     search_fields = ["human__last_names", "human__first_names", "human__email"]
@@ -511,6 +511,10 @@ class IsActivePairingFilter(admin.SimpleListFilter):
 class SeekerPairingMeetingAdmin(admin.TabularInline):
     model = models.SeekerPairingMeeting
     extra = 1
+
+
+class SeekerNeedTypeAdmin(admin.ModelAdmin):
+    model = models.SeekerNeedType
 
 
 class SeekerPairingAdmin(admin.ModelAdmin):
@@ -606,6 +610,7 @@ class CommunityPartnerAdmin(admin.ModelAdmin):
 admin.site.register(models.Human, HumanAdmin)
 admin.site.register(models.Seeker, SeekerAdmin)
 admin.site.register(models.CommunityPartner, CommunityPartnerAdmin)
+admin.site.register(models.SeekerNeedType, SeekerNeedTypeAdmin)
 admin.site.register(models.SeekerPairing, SeekerPairingAdmin)
 admin.site.register(models.SeekerBenefitProxy, SeekerBenefitProxyAdmin)
 admin.site.register(models.SeekerBenefitType, SeekerBenefitTypeAdmin)

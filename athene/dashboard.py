@@ -11,7 +11,12 @@ PROGRAM_MANAGEMENT_LIST = modules.ModelList(
 
 ATHENE_SETUP_LIST = modules.ModelList(
     title="Athene setup",
-    models=("events.models.Calendar", "seekers.models.SeekerBenefitType", "seekers.models.CommunityPartnerService"),
+    models=(
+        "events.models.Calendar",
+        "seekers.models.SeekerNeedType",
+        "seekers.models.SeekerBenefitType",
+        "seekers.models.CommunityPartnerService",
+    ),
 )
 
 DJANGO_SETUP_LIST = modules.ModelList(title="Django setup", models=("django.contrib.*",))

@@ -166,13 +166,23 @@ TRANSPORTATION_CHOICES = [
 ]
 
 
+class SeekerNeedType(models.Model):
+    need = models.CharField(max_length=40, unique=True)
+
+    def __str__(self):
+        return self.need
+
+    class Meta:
+        ordering = ["need"]
+
+
 class Seeker(HumanMixin, models.Model):
 
     human = models.OneToOneField(Human, primary_key=True, db_column="human_ptr_id", on_delete=models.CASCADE)
 
     enroll_date = models.DateField(blank=True, null=True)
     inactive_date = models.DateField(blank=True, null=True)
-    needs_connection = models.BooleanField(default=False)
+    needs = models.ManyToManyField(SeekerNeedType, blank=True, null=True)
 
     def is_active(self):
         return self.inactive_date is None
