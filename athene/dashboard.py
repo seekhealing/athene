@@ -1,13 +1,12 @@
 from admin_tools.dashboard import modules, Dashboard
 
-HUMAN_MODEL_LIST = modules.ModelList(
-    title="Human beings",
-    models=(
-        "seekers.models.Human",
-        "seekers.models.Seeker",
-        "clinical.models.ExtraCare",
-        "seekers.models.CommunityPartner",
-    ),
+HUMAN_LIST = modules.ModelList(
+    title="Human beings", models=("seekers.models.Human", "seekers.models.Seeker", "seekers.models.CommunityPartner",),
+)
+
+CLINICAL_LIST = modules.ModelList(
+    title="Extra care program",
+    models=("clinical.models.ExtraCare", "clinical.models.ConnectionAgent", "clinical.models.ExtraCareBenefitType"),
 )
 
 PROGRAM_MANAGEMENT_LIST = modules.ModelList(
@@ -30,4 +29,4 @@ DJANGO_SETUP_LIST = modules.ModelList(title="Django setup", models=("django.cont
 
 class AtheneDashboard(Dashboard):
     title = "Welcome to Athene!"
-    children = [HUMAN_MODEL_LIST, PROGRAM_MANAGEMENT_LIST, ATHENE_SETUP_LIST, DJANGO_SETUP_LIST]
+    children = [HUMAN_LIST, CLINICAL_LIST, PROGRAM_MANAGEMENT_LIST, ATHENE_SETUP_LIST, DJANGO_SETUP_LIST]

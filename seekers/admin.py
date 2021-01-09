@@ -8,10 +8,12 @@ import operator
 from django.contrib import admin
 from django.contrib import messages
 from django.conf import settings
+from django.core.exceptions import PermissionDenied
+from django.db import transaction
 from django.db.models import Count, Sum, Avg, Q, F, Func
 from django import forms
 from django.http import HttpResponseRedirect
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.utils.decorators import method_decorator
@@ -22,6 +24,7 @@ from django.views.decorators.csrf import csrf_protect
 from . import constants, models, mailchimp, tasks
 from .forms import MassTextForm
 from events.admin import HumanCalendarSubscriptionAdmin
+from clinical.models import ExtraCare, ExtraCareNote
 
 
 logger = logging.getLogger(__name__)
@@ -208,6 +211,12 @@ class HumanAdmin(admin.ModelAdmin):
                 logger.debug(f"Current subscription status: {status}")
                 initial_tags = [tag["name"] for tag in status.get("tags", [])]
                 extra_context["mailchimp_status"] = status
+            try:
+                extracare = obj.extracare
+            except ExtraCare.DoesNotExist:
+                extra_context["can_move_note"] = False
+            else:
+                extra_context["can_move_note"] = request.user.has_perm("clinical.add_extracarenote")
         extra_context["mailchimp_form"] = MailchimpForm(initial=dict(tags=initial_tags))
         return super().changeform_view(request, object_id, form_url, extra_context)
 
@@ -246,6 +255,11 @@ class HumanAdmin(admin.ModelAdmin):
                 name="seekers_human_partner",
             ),
             path("<path:object_id>/ride/", self.admin_site.admin_view(self.find_a_ride), name="seekers_human_ride"),
+            path(
+                "<path:object_id>/note/<path:note_id>/move/",
+                self.admin_site.admin_view(self.move_note),
+                name="seekers_human_move_note",
+            ),
         ] + urlpatterns
         return urlpatterns
 
@@ -265,6 +279,21 @@ class HumanAdmin(admin.ModelAdmin):
         human = self.get_object(request, object_id)
         context = dict(human=human, rides=human.find_ride(), is_popup=True)
         return render(request, "admin/seekers/human/ride.html", context=context)
+
+    def move_note(self, request, object_id, note_id):
+        if not request.user.has_perm("clinical.add_extracarenote"):
+            raise PermissionDenied()
+        with transaction.atomic():
+            human_obj = get_object_or_404(models.Human, id=object_id, extracare__isnull=False)
+            note_obj = get_object_or_404(models.HumanNote, id=note_id, human=human_obj)
+            new_note_obj = ExtraCareNote.objects.create(
+                extracare_id=human_obj.id, added_by=note_obj.added_by, note=note_obj.note
+            )
+            new_note_obj.created = note_obj.created
+            new_note_obj.save()
+            note_obj.delete()
+        self.message_user(request, "Moved note to Extra Care profile.", messages.SUCCESS)
+        return HttpResponseRedirect(reverse("admin:seekers_human_change", args=(object_id,)))
 
     def get_fieldsets(self, request, obj=None):
         if obj is None and "_popup" in request.GET:
@@ -326,7 +355,6 @@ class ServiceFilter(admin.SimpleListFilter):
         "activity_buddy",
         "admin_human",
         "creative_human",
-        "connection_agent_organization",
         "donations_getter",
         "donor_thankyou_caller",
         "donor_thankyou_writer",
@@ -370,9 +398,9 @@ class IsConnectionAgentFilter(admin.SimpleListFilter):
 
     def queryset(self, request, queryset):
         if self.value() == "1":
-            return queryset.exclude(connection_agent_organization="")
+            return queryset.filter(connectionagent__isnull=False)
         elif self.value() == "0":
-            return queryset.filter(connection_agent_organization="")
+            return queryset.filter(connectionagent__isnull=True)
         else:
             return queryset
 
@@ -401,15 +429,7 @@ class PairingStatusFilter(admin.SimpleListFilter):
 class SeekerAdmin(admin.ModelAdmin):
     model = models.Seeker
     fieldsets = (
-        (
-            "Seeker Details",
-            {
-                "fields": [
-                    ("seeker_pairs", "needs"),
-                    ("transportation", "lt_complete"),
-                ],
-            },
-        ),
+        ("Seeker Details", {"fields": [("seeker_pairs", "needs"), ("transportation", "lt_complete"),],},),
         (
             "Service Opportunities",
             {
@@ -418,7 +438,6 @@ class SeekerAdmin(admin.ModelAdmin):
                     ("donor_thankyou_caller", "donor_thankyou_writer", "event_helper", "food_maker"),
                     ("herbal_first_aid", "listening_line", "outreach", "ready_to_pair"),
                     ("ride_share", "space_holder", "street_team"),
-                    "connection_agent_organization",
                 ),
             },
         ),

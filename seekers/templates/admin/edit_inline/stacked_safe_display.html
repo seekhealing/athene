@@ -13,7 +13,7 @@
 {% else %}#{{ forloop.counter }}{% endif %}</span>
       {% if inline_admin_form.show_url %}<a href="{{ inline_admin_form.absolute_url }}">{% trans "View on site" %}</a>{% endif %}
     {% if inline_admin_formset.formset.can_delete and inline_admin_form.original %}<span class="delete">{{ inline_admin_form.deletion_field.field }} {{ inline_admin_form.deletion_field.label_tag }}</span>{% endif %}
-  </h3>
+    {% if inline_admin_form.original and opts.model_name == "human" and can_move_note %}<span class="delete"><a href="../note/{{ inline_admin_form.original.pk }}/move/" style="margin-right: 1em; font-size: 11px; font-weight: normal; color: #447e9b">(Move to Extra Care)</a></span>{% endif %}  </h3>
   {% if inline_admin_form.form.non_field_errors %}{{ inline_admin_form.form.non_field_errors }}{% endif %}
   {% for fieldset in inline_admin_form %}
     {% include "admin/includes/fieldset_safe_display.html" %}
