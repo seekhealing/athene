@@ -11,6 +11,7 @@ from django.utils import timezone
 from localflavor.us.models import USStateField, USZipCodeField
 from phonenumber_field.modelfields import PhoneNumberField
 
+from events.models import HumanAttendance
 from seekers.models import Human, HumanMixin
 from .constants import INTAKE_EVENTS, RELEASE_EVENTS
 
@@ -23,6 +24,21 @@ class ExtraCare(HumanMixin, models.Model):
     human = models.OneToOneField(Human, primary_key=True, on_delete=models.CASCADE)
     status = models.CharField(max_length=10, choices=EXTRACARE_STATUS, default="inactive")
     current_program_flow = models.PositiveIntegerField(default=1)
+
+    _recent_events_attended = None
+    _threshold_date = None
+
+    @property
+    def recent_events_attended(self):
+        if not self._recent_events_attended:
+            now = timezone.localtime()
+            this_morning = now.replace(hour=0, minute=0, second=0, microsecond=0)
+            # The Monday before last
+            self._threshold_date = this_morning - timedelta(days=this_morning.weekday() + 7)
+            self._recent_events_attended = HumanAttendance.objects.filter(
+                start_time__gt=self._threshold_date, human_id=self.human_id
+            ).count()
+        return self._recent_events_attended, self._threshold_date
 
     def completed_events(self):
         return self.progressevent_set.filter(complete=True).order_by("id")

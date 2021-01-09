@@ -128,6 +128,7 @@ class HumanAttendance(models.Model):
     human = models.ForeignKey("seekers.Human", verbose_name="Attendee", on_delete=models.CASCADE)
     calendar = models.ForeignKey(Calendar, on_delete=models.CASCADE)
     event_id = models.CharField(max_length=120, db_index=True)
+    start_time = models.DateTimeField(editable=False, blank=True, null=True)
     legacy_recurring_event_id = models.CharField(
         max_length=120, db_column="recurring_event_id", blank=True, db_index=True
     )
@@ -149,6 +150,16 @@ class HumanAttendance(models.Model):
         except CalendarEvent.DoesNotExist:
             related_event, _ = CalendarEvent.cache(self.event)
         return f'{self.human} went to {related_event.summary or "Unknown event"}'
+
+    def save(self, *args, **kwargs):
+        if self.start_time is None and self.event_id:
+            try:
+                event = CalendarEvent.objects.get(id=self.event_id)
+            except CalendarEvent.DoesNotExist:
+                pass
+            else:
+                self.start_time = event.start_time
+        super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = "Event attendance"

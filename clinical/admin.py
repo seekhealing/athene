@@ -109,8 +109,21 @@ class ExtraCareAdmin(admin.ModelAdmin):
     model = models.ExtraCare
     fieldsets = ((None, {"fields": ("status",)}),)
     readonly_fields = ["status"]
-    list_display = ["first_names", "last_names", "email", "phone_number"]
+    list_display = ["first_names", "last_names", "email", "phone_number", "status"]
+    list_filter = ["status"]
     inlines = [ProgressEventInlineAdmin, ExtraCareNoteAdmin]
+
+    def render_change_form(self, request, context, add=False, change=False, form_url="", obj=None):
+        if obj:
+            event_count, since_date = obj.recent_events_attended
+            if event_count == 0 and obj.status == "active":
+                self.message_user(
+                    request,
+                    f"Seeker {obj.human.first_names} {obj.human.last_names} has attended zero events "
+                    "since last Monday.",
+                    messages.WARNING,
+                )
+        return super().render_change_form(request, context, add, change, form_url, obj)
 
     def response_change(self, request, new_object):
         # Save the new object one more time to kick off the signals updating status

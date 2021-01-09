@@ -39,6 +39,11 @@
       <div class="readonly" style="min-width: 260px">{{ original.email_address }}</div>
     </div>
   </div>
+  <div class="form-row">
+    <div class="fieldBox">
+    <label>Community events attended since {{ original.recent_events_attended.1|date:"N jS"}}:</label>
+    <div class="readonly" style="min-width: 260px">{{ original.recent_events_attended.0 }}</div>
+  </div>
 </fieldset>
 {{ block.super }}
 {% endblock %}
