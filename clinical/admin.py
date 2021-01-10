@@ -113,6 +113,17 @@ class ExtraCareAdmin(admin.ModelAdmin):
     list_filter = ["status"]
     inlines = [ProgressEventInlineAdmin, ExtraCareNoteAdmin]
 
+    def get_object(self, request, object_id, from_field=None):
+        to_return = super().get_object(request, object_id, from_field)
+        if to_return:
+            models.AuditLog.objects.create(
+                extracare=to_return,
+                ip_address=request.META.get("REMOTE_ADDR"),
+                user=request.user,
+                operation=models.AuditLog.Operation.READ,
+            )
+        return to_return
+
     def render_change_form(self, request, context, add=False, change=False, form_url="", obj=None):
         if obj:
             event_count, since_date = obj.recent_events_attended
@@ -127,7 +138,9 @@ class ExtraCareAdmin(admin.ModelAdmin):
 
     def response_change(self, request, new_object):
         # Save the new object one more time to kick off the signals updating status
-        models.ExtraCare.objects.get(pk=new_object.pk).save()
+        instance = models.ExtraCare.objects.get(pk=new_object.pk)
+        instance._no_log = True
+        instance.save()
         return super().response_change(request, new_object)
 
     def get_urls(self):

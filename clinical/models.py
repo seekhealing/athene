@@ -4,12 +4,16 @@ import logging
 from ckeditor.fields import RichTextField
 from django import template
 from django.conf import settings
+from django.contrib.contenttypes.fields import GenericForeignKey
 from django.core.exceptions import ValidationError
+from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 from django.db.models import Q, signals
 from django.utils import timezone
 from localflavor.us.models import USStateField, USZipCodeField
 from phonenumber_field.modelfields import PhoneNumberField
+from dirtyfields import DirtyFieldsMixin
+from threadlocals import threadlocals
 
 from events.models import HumanAttendance
 from seekers.models import Human, HumanMixin
@@ -20,7 +24,34 @@ logger = logging.getLogger(__name__)
 EXTRACARE_STATUS = [("active", "Active"), ("inactive", "Inactive"), ("complete", "Complete")]
 
 
-class ExtraCare(HumanMixin, models.Model):
+class AuditLog(models.Model):
+    class Operation(models.TextChoices):
+        CREATE = "c", "Create"
+        READ = "r", "Read"
+        UPDATE = "u", "Update"
+        DELETE = "d", "Delete"
+
+    object_ct = models.ForeignKey("contenttypes.ContentType", blank=True, null=True, on_delete=models.PROTECT)
+    object_id = models.PositiveIntegerField(blank=True, null=True)
+    object = GenericForeignKey("object_ct", "object_id")
+    extracare = models.ForeignKey("ExtraCare", on_delete=models.PROTECT)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    operation = models.CharField(max_length=1, choices=Operation.choices)
+    data = models.JSONField(encoder=DjangoJSONEncoder, default={})
+    user = models.ForeignKey("auth.User", blank=True, null=True, on_delete=models.PROTECT)
+    ip_address = models.GenericIPAddressField(blank=True, null=True)
+
+    def __str__(self):
+        if self.object:
+            return f"{self.extracare} - {self.object} - {self.operation}"
+        return f"{self.extracare} - {self.operation}"
+
+    class Meta:
+        ordering = ["-timestamp"]
+        index_together = [("object_ct", "object_id")]
+
+
+class ExtraCare(HumanMixin, DirtyFieldsMixin, models.Model):
     human = models.OneToOneField(Human, primary_key=True, on_delete=models.CASCADE)
     status = models.CharField(max_length=10, choices=EXTRACARE_STATUS, default="inactive")
     current_program_flow = models.PositiveIntegerField(default=1)
@@ -60,7 +91,7 @@ class ExtraCare(HumanMixin, models.Model):
         verbose_name = "Extra Care participant"
 
 
-class ExtraCareNote(models.Model):
+class ExtraCareNote(DirtyFieldsMixin, models.Model):
     extracare = models.ForeignKey(ExtraCare, on_delete=models.CASCADE)
     created = models.DateTimeField(auto_now_add=True)
     added_by = models.ForeignKey("auth.User", on_delete=models.SET_NULL, editable=False, null=True)
@@ -110,7 +141,7 @@ class ExtraCareBenefitType(models.Model):
         verbose_name = "Extra Care benefit type"
 
 
-class ExtraCareBenefit(models.Model):
+class ExtraCareBenefit(DirtyFieldsMixin, models.Model):
     extracare = models.ForeignKey(ExtraCare, on_delete=models.CASCADE)
     benefit_type = models.ForeignKey(ExtraCareBenefitType, on_delete=models.CASCADE)
     cost = models.DecimalField(decimal_places=2, max_digits=5)
@@ -174,7 +205,7 @@ class ExtraCareBenefitProxy(ExtraCare):
         verbose_name = "Extra Care benefit report"
 
 
-class ProgressEvent(models.Model):
+class ProgressEvent(DirtyFieldsMixin, models.Model):
     extracare = models.ForeignKey(ExtraCare, on_delete=models.CASCADE)
     program_flow = models.PositiveIntegerField()
     event_type = models.CharField(max_length=40)
@@ -223,6 +254,55 @@ class ProgressEvent(models.Model):
 
     class Meta:
         ordering = ["id"]
+
+
+def audit_log_presave_handler(sender=None, instance=None, **kwargs):
+    if issubclass(sender, DirtyFieldsMixin) and not getattr(instance, "_no_log", False):
+        if instance._state.adding:
+            threadlocals.set_thread_variable("operation", AuditLog.Operation.CREATE)
+        else:
+            if not instance.get_dirty_fields():
+                return
+            threadlocals.set_thread_variable("operation", AuditLog.Operation.UPDATE)
+        threadlocals.set_thread_variable("data", instance.get_dirty_fields(verbose=True))
+
+
+def audit_log_postsave_handler(sender=None, instance=None, **kwargs):
+    if issubclass(sender, DirtyFieldsMixin) and threadlocals.get_thread_variable("operation"):
+        log_entry = AuditLog()
+        log_entry.operation = threadlocals.get_thread_variable("operation")
+        log_entry.data = threadlocals.get_thread_variable("data")
+        request = threadlocals.get_current_request()
+        if request:
+            log_entry.ip_address = request.META.get("REMOTE_ADDR")
+            log_entry.user = request.user if request.user.is_authenticated else None
+        if isinstance(instance, ExtraCare):
+            log_entry.extracare = instance
+        else:
+            log_entry.extracare = instance.extracare
+            log_entry.object = instance
+        log_entry.save()
+
+
+def audit_log_postdelete_handler(sender=None, instance=None, **kwargs):
+    if issubclass(sender, DirtyFieldsMixin):
+        log_entry = AuditLog()
+        log_entry.operation = AuditLog.Operation.DELETE
+        request = threadlocals.get_current_request()
+        if request:
+            log_entry.ip_address = request.META.get("REMOTE_ADDR")
+            log_entry.user = request.user if request.user.is_authenticated else None
+        if isinstance(instance, ExtraCare):
+            log_entry.extracare = instance
+        else:
+            log_entry.extracare = instance.extracare
+            log_entry.object = instance
+        log_entry.save()
+
+
+signals.pre_save.connect(audit_log_presave_handler)
+signals.post_save.connect(audit_log_postsave_handler)
+signals.post_delete.connect(audit_log_postdelete_handler)
 
 
 def update_extracare_status(sender=None, instance=None, **kwargs):
