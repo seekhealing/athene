@@ -5,7 +5,7 @@
 --------------------------------------------------------------------------------
 {% for event in events %}
 {% if event.start_dt|date:"Ymd" == today %}Today ({{ event.start_dt|date:"l, F j" }}){% else %}{{ event.start_dt|date:"l, F j" }}{% endif %}, {{ event.start_dt|date:"P" }}:
-{{ event.summary }}{% if event.location %} at {{ event.location_name|default:event.location }}{% endif %}
+{{ event.summary }}{% if event.location %}( at {{ event.location_name|default:event.location }} ){% endif %}
 
 {% endfor %}{% regroup events|dictsort:"location_name" by location_name as location_list %}{% for location in location_list %}
 {% if location.grouper %}

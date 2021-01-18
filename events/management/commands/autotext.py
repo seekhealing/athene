@@ -59,11 +59,11 @@ class Command(BaseCommand):
         end_dt = parse(event["end"]["dateTime"]).astimezone(pytz.timezone("US/Eastern"))
         description = re.sub(r"\n+", "\n", event["description"].replace("<br>", "\n").replace("&nbsp;", " "))
         # Location could be an place+address or a URL
-        location = event.get("location", "")
+        location = event.get("location", "").strip()
         if location and not location.startswith(("https://", "http://")):
             location_parts, _ = usaddress.tag(event.get("location"), tag_mapping=self.tag_mapping)
-            location_name = location_parts["recipient"]
-            location_place = location_parts["address"]
+            location_name = location_parts.get("recipient", "")
+            location_place = location_parts.get("address", "")
         else:
             location_name = location_place = ""
         to_return = event.copy()
