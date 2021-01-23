@@ -190,7 +190,8 @@ class ExtraCareBenefit(DirtyFieldsMixin, models.Model):
 class ExtraCareBenefitProxy(ExtraCare):
     def this_month(self):
         qs = self.extracarebenefit_set.filter(
-            Q(date__isnull=False) | Q(cancelled__isnull=False), date__month=timezone.now().month
+            Q(date__month=timezone.now().month, date__year=timezone.now().year)
+            | Q(cancelled__month=timezone.now().month, cancelled__year=timezone.now().year)
         ).select_related()
         result = qs.aggregate(total_cost=models.Sum("cost"))
         return result["total_cost"]

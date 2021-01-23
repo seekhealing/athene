@@ -203,9 +203,11 @@ class ExtraCareBenefitProxyAdmin(admin.ModelAdmin):
     def changelist_view(self, request, extra_context=None):
         today = timezone.now().date()
 
-        benefit_types = models.ExtraCareBenefitType.objects.all()
-        this_month_filter = Q(extracarebenefit__date__month=today.month, extracarebenefit__date__year=today.year)
-        this_year_filter = Q(extracarebenefit__date__year=today.year)
+        benefit_types = models.ExtraCareBenefitType.objects.all().order_by("connectionagent", "name")
+        this_month_filter = Q(extracarebenefit__date__month=today.month, extracarebenefit__date__year=today.year) | Q(
+            extracarebenefit__cancelled__month=today.month, extracarebenefit__cancelled__year=today.year
+        )
+        this_year_filter = Q(extracarebenefit__date__year=today.year) | Q(extracarebenefit__cancelled__year=today.year)
         used_benefit_filter = Q(extracarebenefit__date__isnull=False) | Q(extracarebenefit__cancelled__isnull=False)
 
         def _annotated(qs, filter_q):
@@ -220,12 +222,14 @@ class ExtraCareBenefitProxyAdmin(admin.ModelAdmin):
         this_year = _annotated(benefit_types, this_year_filter)
         all_time = _annotated(benefit_types, Q())
 
-        seekers_this_month = models.ExtraCareBenefit.objects.filter(date__month=today.month).aggregate(
-            count=Count("extracare")
-        )["count"]
-        total_spent_this_month = models.ExtraCareBenefit.objects.filter(date__month=today.month).aggregate(
-            total=Sum("cost")
-        )["total"] or Decimal("0")
+        seekers_this_month = models.ExtraCareBenefit.objects.filter(
+            Q(date__month=today.month, date__year=today.year)
+            | Q(cancelled__month=today.month, cancelled__year=today.year)
+        ).aggregate(count=Count("extracare"))["count"]
+        total_spent_this_month = models.ExtraCareBenefit.objects.filter(
+            Q(date__month=today.month, date__year=today.year)
+            | Q(cancelled__month=today.month, cancelled__year=today.year)
+        ).aggregate(total=Sum("cost"))["total"] or Decimal("0")
         if seekers_this_month:
             avg_per_seeker = total_spent_this_month / seekers_this_month
         else:
