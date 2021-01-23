@@ -37,6 +37,8 @@ twilio = "*"
 django-admin-tools = "*"
 usaddress = "*"
 social-auth-app-django = "*"
+django-threadlocals = "*"
+django-dirtyfields = "*"
 
 [requires]
 python_version = "3.8"

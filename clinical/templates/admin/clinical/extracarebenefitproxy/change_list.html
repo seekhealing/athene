@@ -16,7 +16,7 @@
 {% endblock %}
 {% block coltype %}flex{% endblock %}
 
-{% block content_title %}<h1>Seeker Benefit Report for {{ today|date:"DATE_FORMAT"}}</h1>{% endblock %}
+{% block content_title %}<h1>Extra Care Benefit Report for {{ today|date:"DATE_FORMAT"}}</h1>{% endblock %}
 
 {% block content %}
 <div id="content-main">
@@ -46,12 +46,18 @@
     </thead>
     <tbody>
     {% for this_month, this_year, all_time in by_benefit_type %}
+    <!-- connection_agent_id == {{ this_month.connectionagent_id }} -->
+    {% ifchanged this_month.connectionagent %}
+    <tr>
+        <th scope="rowgroup" colspan="13" style="background: #417690; color: #fff">{% if this_month.connectionagent %}{{ this_month.connectionagent }}{% else %}(Miscellaneous){% endif %}</th>
+    </th>
+    {% endifchanged %}
     <tr class="{% cycle "row1" "row2" %}">
-        <td>{{ this_month.name }}</td>
-        <td>$ {{this_month.default_cost|floatformat:2 }}</td>
-        <td>{{ this_month.used }}</td><td>$ {{ this_month.total|floatformat:2 }}</td><td>$ {{ this_month.average_cost|floatformat:2 }}</td>
-        <td>{{ this_year.used }}</td><td>$ {{ this_year.total|floatformat:2 }}</td><td>$ {{ this_year.average_cost|floatformat:2 }}</td>
-        <td>{{ all_time.used }}</td><td>$ {{ all_time.total|floatformat:2 }}</td><td>$ {{ all_time.average_cost|floatformat:2 }}</td>
+        <td style="border-right: 1px solid #aaa">{{ this_month.name }}</td>
+        <td style="border-right: 1px solid #aaa">$ {{this_month.default_cost|default:0.0|floatformat:2 }}</td>
+        <td>{{ this_month.used }}</td><td>$ {{ this_month.total|default:0.0|floatformat:2 }}</td><td style="border-right: 1px solid #aaa">$ {{ this_month.average_cost|default:0.0|floatformat:2 }}</td>
+        <td>{{ this_year.used }}</td><td>$ {{ this_year.total|default:0.0|floatformat:2 }}</td><td style="border-right: 1px solid #aaa">$ {{ this_year.average_cost|default:0.0|floatformat:2 }}</td>
+        <td>{{ all_time.used }}</td><td>$ {{ all_time.total|default:0.0|floatformat:2 }}</td><td style="border-right: 1px solid #aaa">$ {{ all_time.average_cost|default:0.0|floatformat:2 }}</td>
     </tr>
     {% endfor %}
     </tbody>
@@ -64,7 +70,7 @@
     <tbody>
     <tr>
         <th scope="row">Total spent</th>
-        <td>$ {{ total_spent_this_month|floatformat:2 }}</td>
+        <td>$ {{ total_spent_this_month|default:0.0|floatformat:2 }}</td>
     </tr>
     <tr>
         <th scope="row">Benefitted seekers</th>
@@ -72,7 +78,7 @@
     </tr>
     <tr>
         <th scope="row">Avg spend per seeker</th>
-        <td>$ {{ avg_per_seeker|floatformat:2 }}</td>
+        <td>$ {{ avg_per_seeker|default:0.0|floatformat:2 }}</td>
     </tr>
     </tbody>
 </table>
@@ -80,7 +86,7 @@
 
 <div class="module">
 <table>
-    <caption>Benefits per Seeker this month</caption>
+    <caption>Benefits per Extra Care Seeker this month</caption>
     <thead>
     <tr>
         <th scope="col">Seeker name</th>
@@ -93,7 +99,7 @@
     <tr>
         <td>{{ seeker }}</td>
         <td>{{ seeker.used }}</td>
-        <td>$ {{ seeker.total|floatformat:2 }}</td>
+        <td>$ {{ seeker.total|default:0.0|floatformat:2 }}</td>
     </tr>
     {% endfor %}
     </tbody>

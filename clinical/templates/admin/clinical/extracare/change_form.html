@@ -1,6 +1,16 @@
 {% extends "admin/seekers/tabbed_change_form.html" %}
 {% load static %}
 
+{% block object-tools-items %}
+{% if original and original.status == 'active' %}
+<li><form method="post" action="{% url "admin:clinical_extracare_exitearly" object_id %}">{% csrf_token %}<a href="#" onclick="this.parentNode.submit()">Exit program early</a></form></li>
+{% endif %}
+<li><a href="{% url "admin:clinical_extracarebenefitproxy_change" object_id %}?_to_field=human&_popup=1"
+       class="related-widget-wrapper-link change-related"
+       id="change_id_seekerbenefit">Seeker benefits</a></li>
+{{ block.super }}
+{% endblock %}
+
 {% block field_sets %}
 <fieldset class="module aligned">
   <div class="form-row">
@@ -28,6 +38,11 @@
       <label>Email address:</label>
       <div class="readonly" style="min-width: 260px">{{ original.email_address }}</div>
     </div>
+  </div>
+  <div class="form-row">
+    <div class="fieldBox">
+    <label>Community events attended since {{ original.recent_events_attended.1|date:"N jS"}}:</label>
+    <div class="readonly" style="min-width: 260px">{{ original.recent_events_attended.0 }}</div>
   </div>
 </fieldset>
 {{ block.super }}

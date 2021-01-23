@@ -8,7 +8,10 @@
 (function($) {
     $(document).ready(function() {
       $('form').submit(function() {
-        $(this).find(':submit').prop({disabled: true});
+        $(this).submit(function() {
+          return false;
+        });
+        return true;
       });
     });
 })(django.jQuery);
@@ -49,8 +52,8 @@
         <li><a href="#" onClick="document.getElementById('masstext-form').submit()">Send text/email</a></li>
       </form>
       {% endif %}
-      {% if not original.human.seeker %}<li><a href="{% url "admin:seekers_human_enroll" object_id=original.pk %}">Enroll seeker</a></li>{% endif %}
-      {% if not original.human.communitypartner %}<li><a href="{% url "admin:seekers_human_partner" object_id=original.pk %}">Mark as community partner</a></li>{% endif %}
+      {% if perms.seekers.add_seeker and not original.human.seeker %}<li><a href="{% url "admin:seekers_human_enroll" object_id=original.pk %}">Enroll seeker</a></li>{% endif %}
+      {% if perms.seekers.add_communitypartner and not original.human.communitypartner %}<li><a href="{% url "admin:seekers_human_partner" object_id=original.pk %}">Mark as community partner</a></li>{% endif %}
       {% if original.human.street_address %}
         <li><a href="{% url "admin:seekers_human_ride" object_id %}" class="related-widget-wrapper-link">Find a Ride</a></li>
       {% endif %}
@@ -74,10 +77,13 @@
 <div class="ui-tabs ui-corner-all ui-widget ui-widget-content">
 <ul role="tablist" class="ui-tabs-nav ui-corner-all ui-helper-reset ui-helper-clearfix ui-widget-header">
   <li role="tab" class="ui-tabs-tab ui-corner-top ui-state-default ui-tab {% if opts.model_name == "human" %}ui-tabs-active ui-state-active{% endif %}"><a href="{% if opts.model_name == "human" %}#{% else %}{% url "admin:seekers_human_change" original.pk %}{% endif %}">Basic info</a></li>
-  {% if original.human.seeker %}
+  {% if original.human.seeker and perms.seekers.change_seeker%}
   <li role="tab" class="ui-tabs-tab ui-corner-top ui-state-default ui-tab {% if opts.model_name == "seeker" %}ui-tabs-active ui-state-active{% endif %}"><a href="{% if opts.model_name == "seeker" %}#{% else %}{% url "admin:seekers_seeker_change" original.pk %}{% endif %}">Seeker profile</a></li>
   {% endif %}
-  {% if original.human.communitypartner %}
+  {% if original.human.extracare and perms.clinical.change_extracare%}
+  <li role="tab" class="ui-tabs-tab ui-corner-top ui-state-default ui-tab {% if opts.model_name == "extracare" %}ui-tabs-active ui-state-active{% endif %}"><a href="{% if opts.model_name == "extracare" %}#{% else %}{% url "admin:clinical_extracare_change" original.pk %}{% endif %}">Extra Care</a></li>
+  {% endif %}
+  {% if original.human.communitypartner and perms.seekers.change_communitypartner%}
   <li role="tab" class="ui-tabs-tab ui-corner-top ui-state-default ui-tab {% if opts.model_name == "communitypartner" %}ui-tabs-active ui-state-active{% endif %}"><a href="{% if opts.model_name == "communitypartner" %}#{% else %}{% url "admin:seekers_communitypartner_change" original.pk %}{% endif %}">Community partner</a></li>
   {% endif %}
 </ul>

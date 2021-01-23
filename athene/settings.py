@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     "social_django",
     "seekers",
     "events",
+    "clinical",
 ]
 if DEBUG:
     try:
@@ -74,6 +75,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "threadlocals.middleware.ThreadLocalMiddleware",
 ]
 if DEBUG:
     try:
