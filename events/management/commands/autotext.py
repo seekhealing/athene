@@ -56,8 +56,11 @@ class Command(BaseCommand):
 
     def normalize_event(self, event):
         start_dt = parse(event["start"]["dateTime"]).astimezone(pytz.timezone("US/Eastern"))
-        end_dt = parse(event["end"]["dateTime"]).astimezone(pytz.timezone("US/Eastern"))
-        description = re.sub(r"\n+", "\n", event["description"].replace("<br>", "\n").replace("&nbsp;", " "))
+        try:
+            end_dt = parse(event["end"]["dateTime"]).astimezone(pytz.timezone("US/Eastern"))
+        except KeyError:
+            end_dt = None
+        description = re.sub(r"\n+", "\n", event.get("description", "").replace("<br>", "\n").replace("&nbsp;", " "))
         # Location could be an place+address or a URL
         location = event.get("location", "").strip()
         if location and not location.startswith(("https://", "http://")):
