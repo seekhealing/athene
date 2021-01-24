@@ -219,6 +219,8 @@ TWILIO_BYPASS_SIGNATURE = os.environ.get("TWILIO_BYPASS_SIGNATURE")
 
 CELERY_BROKER_URL = os.environ.get("REDIS_URL", "redis://127.0.0.1:6379/1")
 CELERY_RESULT_BACKEND = os.environ.get("REDIS_URL", "redis://127.0.0.1:6379/1")
+CELERY_REDIS_MAX_CONNECTIONS = 2
+
 
 SLACK_WEBHOOK_MAP = json.loads(os.environ.get("SLACK_WEBHOOK_MAP", "{}"))
 DEFAULT_SLACK_CHANNEL = "#techstuff" if DEBUG else "#calendar"
