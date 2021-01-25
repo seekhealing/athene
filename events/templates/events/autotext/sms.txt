@@ -5,8 +5,8 @@
 {% regroup events|dictsort:"location_name" by location_name as location_list %}{% for location in location_list %}
 {% if location.grouper %}
 {{ location.grouper }} is at {{ location.list.0.location_place }}{% endif %}{% if location.grouper == "SeekHealing" %}
-(Ring the doorbell at the back entrance of the United Way Building and someone will come let you in.)
+(Ring the doorbell at the back entrance of the United Way Building)
 {% elif location.grouper == "Making Whole" %}
-(Go around back behind the building, across from Hi-Wire.){% endif %}{% endfor %}
+(Go around back behind the building, across from Hi-Wire){% endif %}{% endfor %}
 {{ calendar.sms_closing_override|default:calendar.default_sms_closing }}
 Reply STOP to unsub.{% endautoescape %}
